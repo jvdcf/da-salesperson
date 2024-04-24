@@ -1,0 +1,63 @@
+As part of the second project of Algorithm Design, // TODO  
+
+This project was carried out by students from group 163: 
+ - Maria Rabelo (up202000130@up.pt)
+ - Guilherme Matos (up202208755@up.pt)
+ - João Ferreira (up202208393@up.pt)
+
+---
+
+# Running the project
+
+The project was developed in C++ and uses the CMake tool to compile the source code and this documentation.  
+
+This program takes as input a path to a directory containing csv files with the following names:
+- // TODO  
+
+Make sure that the csv files are in the correct format and that the directory path is correct before executing.
+
+> **Note:** The csv files can have different names, for example: `TODO.csv` can be named `TODO_ing.csv`.
+> Despite this, it is recommended to keep the original names.
+
+### Using the shell script (Linux only)
+1. Make sure that the C / C++ dependencies are installed on your system.
+2. Execute the script `run.sh` (located in the directory of the project) in the terminal, giving the path to the directory containing the csv files as an argument.  
+   For example:
+   ```bash
+   ./run.sh dataset/TODO
+   ```
+
+> **Warning:** Make sure the script has the correct permissions to be executed and the package `rlwrap` is installed.
+> **Note:** Feel free to change the script to suit your needs.
+
+### Using the terminal
+
+```
+cmake -DCMAKE_BUILD_TYPE=Release CMakeLists.txt
+make -j$(nproc)
+./DA2324_PRJ2_G163 dataset/TODO
+```
+
+> **Warning:** Don't forget to **check the location and name of the csv files**.  
+> The commands above assume that the csv files are inside the `dataset/TODO` folder.
+
+### Using CLion
+
+1. Open the project folder in CLion.
+2. Create a CMake profile with the build type set to `Release`.
+3. Select the configuration `TODO` already created.  
+   _or_  
+   Create a new configuration with the correct program arguments and working directory.  
+   For example:
+    - Program arguments: `dataset/TODO`
+    - Working directory: `$ProjectFileDir$`
+4. Run the configuration.
+
+---
+
+# Notes
+
+- Certain commands may require extended execution time in `Debug` build mode. 
+  Ensure the build mode is set to `Release` prior to running the program. 
+- The integrated terminal in CLion may exhibit different behavior compared to the system terminal.
+  It is recommended to use the system terminal for running the program when feasible.
