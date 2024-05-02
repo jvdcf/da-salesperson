@@ -2,7 +2,7 @@
 #define DA2324_PRJ1_G163_DATA_H
 
 #include "../../lib/Graph.h"
-#include "../CSV.h"
+#include "../CSV.hpp"
 #include "Info.h"
 #include <cstdint>
 #include <optional>
