@@ -10,7 +10,7 @@
 Runtime::Runtime(Data *d) { this->data = d; }
 
 [[noreturn]] void Runtime::run() {
-  std::cout << "Welcome to Water Supply Management.\n"
+  std::cout << "Welcome to SMS (Shipping Management System).\n"
             << "Type 'help' to learn more.\n";
 
   std::string input, buf;
@@ -20,6 +20,8 @@ Runtime::Runtime(Data *d) { this->data = d; }
 
     std::cout << "> ";
     std::getline(std::cin, input);
+    if (input.empty())
+      continue;
     std::istringstream iss(input);
     processArgs(iss);
   }
@@ -42,8 +44,8 @@ void Runtime::handleQuit() {
 }
 
 void Runtime::processArgs(std::istream &args) {
-  auto pos = args.tellg();
   constexpr auto cmd_parser = parse_cmd();
+  auto pos = args.tellg();
   auto cmd_res = cmd_parser.to_fn()(args);
   if (!cmd_res.has_val) {
     args.clear();
