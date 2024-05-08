@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 3.26)
 project(DA2324_PRJ2_G163)
 
 set(CMAKE_CXX_STANDARD 20)
-
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Doxygen Build
 find_package(Doxygen)
 if (DOXYGEN_FOUND)
@@ -29,8 +29,8 @@ endif (DOXYGEN_FOUND)
 add_executable(DA2324_PRJ2_G163 main.cpp
         lib/Graph.h 
         src/Utils.h src/Utils.cpp
-        src/Parser.cpp src/Parser.h
-        src/CSV.cpp src/CSV.h
+        src/Parsum.hpp
+        src/CSV.hpp
         src/data/Info.cpp src/data/Info.h
         src/data/Data.cpp src/data/Data.h
         src/Runtime.cpp src/Runtime.h

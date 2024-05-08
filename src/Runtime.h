@@ -1,13 +1,14 @@
 #ifndef DA2324_PRJ1_G163_RUNTIME_H
 #define DA2324_PRJ1_G163_RUNTIME_H
 
-#include "Parser.h"
+#include "Parsum.hpp"
 #include "Utils.h"
 #include "data/Data.h"
 #include <array>
 #include <cctype>
 #include <cstdint>
 #include <exception>
+#include <istream>
 #include <optional>
 #include <string>
 #include <tuple>
@@ -25,28 +26,28 @@ public:
     Code,
   };
   Kind kind;
-  CommandLineValue(Kind k, auto v) : kind(k), value(v){};
+  CommandLineValue(Kind k, auto v) : kind(k), value(v) {};
   std::optional<std::string> getStr();
   std::optional<uint32_t> getInt();
-  static Parser<CommandLineValue> parse_ident();
+  // static Parser<CommandLineValue> parse_ident();
 
-  static Parser<CommandLineValue> parse_int() {
-    return verifies(isdigit).take_while().recognize().pmap<CommandLineValue>(
-        [](auto inp) {
-          return CommandLineValue(Kind::Int, (uint32_t)std::stoul(inp));
-        });
+  static consteval auto parse_int() {
+    return parsum::map(parsum::many1(parsum::digit()), [](std::string num) {
+      return CommandLineValue(Kind::Int, (uint32_t)std::stoul(num));
+    });
   }
 
-  static Parser<CommandLineValue> parse_str() {
-    return verifies(isalnum).take_while().recognize().pmap<CommandLineValue>(
-        [](auto inp) { return CommandLineValue(Kind::String, inp); });
+  static consteval auto parse_str() {
+    return parsum::map(
+        parsum::many1(parsum::map(
+            parsum::verify([](char const &c) { return isalnum(c); }),
+            [](char const &c) { return std::string{c}; })),
+        [](auto s) { return CommandLineValue(Kind::String, s); });
   }
 
-  static Parser<CommandLineValue> parse_sep(char c) {
-    return verifies([c](auto b) { return c == b; })
-        .pmap<CommandLineValue>([](auto inp) {
-          return CommandLineValue(Kind::Sep, std::to_string(inp));
-        });
+  static consteval auto parse_sep(char const &c) {
+    return parsum::map(parsum::char_p<std::string>(c),
+                       [](auto s) { return CommandLineValue(Kind::Sep, s); });
   }
 
 private:
@@ -61,7 +62,7 @@ public:
   } command;
   std::vector<CommandLineValue> args;
   Command(Cmd typ, std::vector<CommandLineValue> args)
-      : command(typ), args(args){};
+      : command(typ), args(args) {};
 };
 
 /**
@@ -80,7 +81,7 @@ private:
    * @param arg: A vector of strings with the arguments. The first string is the
    * command.
    */
-  void processArgs(std::string input);
+  void processArgs(std::istream &input);
 
 public:
   /**
@@ -95,24 +96,23 @@ public:
    */
   [[noreturn]] void run();
 
-  static Parser<Command> parse_quit() {
-    return ws().pair(string_p("quit")).pair(ws()).pmap<Command>([](auto inp) {
-      return Command(Command::Quit, {});
-    });
+  static consteval auto parse_quit() {
+    // return ws().pair(string_p("quit")).pair(ws()).pmap<Command>([](auto inp)
+    // {
+    //   return Command(Command::Quit, {});
+    // });
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("quit") >> parsum::ws0(),
+                       [](auto c) { return Command(Command::Quit, {}); });
   }
 
-  static Parser<Command> parse_help() {
-    return ws().pair(string_p("help")).pair(ws()).pmap<Command>([](auto inp) {
-      return Command(Command::Help, {});
-    });
+  static consteval auto parse_help() {
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("help") >> parsum::ws0(),
+                       [](auto c) { return Command(Command::Help, {}); });
   }
 
-  static Parser<Command> parse_cmd() {
-    return alt(std::vector({
-      parse_help(),
-      parse_quit(),
-    }));
-  }
+  static consteval auto parse_cmd() { return parse_quit() | parse_help(); }
 
   void printHelp();
   void handleQuit();
