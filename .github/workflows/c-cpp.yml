@@ -23,8 +23,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Update Ubuntu System
-        run: sudo apt update && sudo apt upgrade
+      # - name: Update Ubuntu System
+      #   run: sudo apt update && sudo apt upgrade
 
       - name: Configure CMake
         env:
