@@ -42,9 +42,12 @@ void Runtime::handleQuit() {
 }
 
 void Runtime::processArgs(std::istream &args) {
+  auto pos = args.tellg();
   constexpr auto cmd_parser = parse_cmd();
-  auto cmd_res = parse_cmd().to_fn()(args);
+  auto cmd_res = cmd_parser.to_fn()(args);
   if (!cmd_res.has_val) {
+    args.clear();
+    args.seekg(pos);
     std::string arg_contents(std::istreambuf_iterator<char>(args), {});
     return error("The command '" + arg_contents +
                  "' is invalid. Type 'help' to know more.");

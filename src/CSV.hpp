@@ -182,15 +182,9 @@ consteval auto parse_weird();
 
 consteval auto parse_sep();
 
-consteval auto p_digits() {
-  return parsum::many1(
-      parsum::map(parsum::verify([](char const &c) { return isdigit(c); }),
-                  [](auto c) { return std::string{c}; }));
-}
-
 consteval auto parse_int() {
   constexpr auto parser = parsum::map(
-      maybe(parsum::char_p<std::string>('-')) + p_digits(),
+      maybe(parsum::char_p<std::string>('-')) + parsum::digits1(),
       [](auto inp) -> CsvValues { return CsvValues::Int(std::stoll(inp)); });
   return context(parser, [](auto err) {
     return parsum::ParseError("Failed to parse int: " + err.get_why(),
@@ -200,8 +194,8 @@ consteval auto parse_int() {
 
 consteval auto parse_flt() {
   constexpr auto parser =
-      parsum::maybe(parsum::char_p<std::string>('-')) >> p_digits() >>
-      parsum::char_p<std::string>('.') >> p_digits() >>
+      parsum::maybe(parsum::char_p<std::string>('-')) >> parsum::digits1() >>
+      parsum::char_p<std::string>('.') >> parsum::digits1() >>
       parsum::cut(
           parsum::peek(parsum::verify([](char const &c) { return c != '.'; })));
   constexpr auto result = map(parser, [](auto inp) -> CsvValues {
@@ -231,8 +225,8 @@ consteval auto parse_str() {
 consteval auto parse_weird() {
   constexpr auto parse_quot = parsum::char_p('"');
   constexpr auto parse_comm = parsum::char_p(',');
-  constexpr auto parser =
-      parse_quot >> p_digits() >> parse_comm >> p_digits() >> parse_quot;
+  constexpr auto parser = parse_quot >> parsum::digits1() >> parse_comm >>
+                          parsum::digits1() >> parse_quot;
   constexpr auto result = parsum::map(
       parser, [](std::tuple<char, std::string, char, std::string, char> t) {
         auto [_1, p1, _2, p2, _3] = t;

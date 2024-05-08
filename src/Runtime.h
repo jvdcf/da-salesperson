@@ -101,18 +101,14 @@ public:
     // {
     //   return Command(Command::Quit, {});
     // });
-    using parsum::char_p;
-    constexpr auto quit =
-        char_p('q') >> char_p('u') >> char_p('i') >> char_p('t');
-    return parsum::map(parsum::ws0() >> quit >> parsum::ws0(),
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("quit") >> parsum::ws0(),
                        [](auto c) { return Command(Command::Quit, {}); });
   }
 
   static consteval auto parse_help() {
-    using parsum::char_p;
-    constexpr auto help =
-        char_p('h') >> char_p('e') >> char_p('l') >> char_p('p');
-    return parsum::map(parsum::ws0() >> help >> parsum::ws0(),
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("help") >> parsum::ws0(),
                        [](auto c) { return Command(Command::Help, {}); });
   }
 

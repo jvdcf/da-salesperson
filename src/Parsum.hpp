@@ -4,35 +4,45 @@
 #include <algorithm>
 #include <cctype>
 #include <cstdint>
+#include <cstdlib>
+#include <cstring>
 #include <exception>
+#include <iostream>
 #include <istream>
 #include <iterator>
 #include <string>
+#include <string_view>
 #include <tuple>
 #include <type_traits>
 #include <utility>
 #include <vector>
 
+/**
+ * @brief Inspired by
+ * https://github.com/Qqwy/cpp-parser_combinators/blob/main/optimized/main.cc.
+ * */
 namespace parsum {
-// Inspired by
-// https://github.com/Qqwy/cpp-parser_combinators/blob/main/optimized/main.cc.
-
 // join_tup()
+
+/** Joins two types into a tuple of them */
 template <typename T, typename U>
 std::tuple<T, U> constexpr join_tup(T const &lhs, U const &rhs) {
   return std::make_tuple(lhs, rhs);
 }
+/// Joins a tuple and a type into a tuple with the type at the last place
 template <typename... Ts, typename U>
 std::tuple<Ts..., U> constexpr join_tup(std::tuple<Ts...> const &lhs,
                                         U const &rhs) {
   return std::tuple_cat(lhs, std::make_tuple(rhs));
 }
+/// Joins a type and a tuple into a tuple with the type at the first place
 template <typename T, typename... Us>
 std::tuple<T, Us...> constexpr join_tup(T const &lhs,
                                         std::tuple<Us...> const &rhs) {
   return std::tuple_cat(std::make_tuple(lhs), rhs);
 }
 
+/// Joins two tuples into a tuple
 template <typename... Ts, typename... Us>
 std::tuple<Ts..., Us...> constexpr join_tup(std::tuple<Ts...> const &lhs,
                                             std::tuple<Us...> const &rhs) {
@@ -40,55 +50,64 @@ std::tuple<Ts..., Us...> constexpr join_tup(std::tuple<Ts...> const &lhs,
 }
 // join_tup() END
 
-// From tup
+/// Converts a tuple of types into an object that also contains those types in
+/// that order
 template <typename CT, typename... Ts>
 constexpr CT from_tup(std::tuple<Ts...> const &tup) {
   return std::apply([](auto... elems) { return CT{elems...}; }, tup);
 }
 
+/// Adds/concats all the values into the Out type.
 template <typename Out, typename... Ts>
 Out concat_all(Out default_val, Ts... elems) {
   return (default_val + ... + elems);
 }
-
+/// Specialized implementation of from_tup with CT = std:string
 template <typename... Ts> std::string from_tup(std::tuple<Ts...> const &tup) {
   return std::apply(
       [](auto... elems) { return concat_all(std::string(), elems...); }, tup);
 }
 // From tup end
 
-// INTO
+/// wrapper for from_tup
 template <typename In, typename Out> Out into(In const &val) {
   return from_tup<Out>(val);
 }
-
+/// specialization
 template <> inline std::string into(std::vector<char> const &val) {
   return std::string(val.begin(), val.end());
 }
 
+/// specialization
 template <> inline std::vector<char> into(std::string const &val) {
   return std::vector<char>(val.begin(), val.end());
 }
 
+/// specialization
 template <> inline std::string into(char const &val) { return {val}; }
 
+/// specialization
 template <typename T> std::vector<T> into(T const &val) { return {val}; }
 
+/// specialization
 template <> inline std::string into(std::tuple<char, std::string> const &val) {
   auto [ch, st] = val;
   return std::string{ch} + st;
 }
 
+/// specialization
 template <> inline std::string into(std::tuple<std::string, char> const &val) {
   auto [st, ch] = val;
   return st + std::string{ch};
 }
 
+/// specialization
 template <> inline std::string into(std::tuple<char, char> const &val) {
   auto [ch1, ch2] = val;
   return std::string{ch1, ch2};
 }
 
+/// specialization
 template <>
 inline std::string into(std::tuple<char, char, std::string> const &val) {
   auto [ch1, ch2, st] = val;
@@ -97,17 +116,27 @@ inline std::string into(std::tuple<char, char, std::string> const &val) {
 // INTO end
 
 // ParseError
+/// Constexpr struct that contains an error message, level of error, and
+/// position.
 struct ParseError {
 public:
+  /// Level of error.
   enum class ErrorVariant {
     Recoverable,
     Irrecoverable,
   };
+
+  /// Constructor
   constexpr ParseError(std::string const &why, ErrorVariant kind, uint64_t pos)
       : why(why), pos(pos), kind(kind) {};
+  /// Getter for the level of error
   constexpr ErrorVariant get_kind() { return this->kind; }
+  /// Getter for message
   constexpr std::string const &get_why() const { return this->why; }
+  /// Getter for stream position
   constexpr uint64_t get_pos() const { return pos; }
+  /// Calculates the coordinates of the error, taking the original collection in
+  /// full
   template <typename T>
   constexpr std::tuple<uint64_t, uint64_t>
   get_coord(T const &collection) const {
@@ -129,12 +158,14 @@ public:
     }
     return {col + 1, line + 1};
   }
+  /// Returns a formatted string with the error information
   template <typename T>
   constexpr std::string display(T const &collection) const {
     auto [column, line] = get_coord(collection);
     return "Found error at line " + std::to_string(line) + ", column " +
            std::to_string(column) + ": " + std::string(this->why);
   }
+  /// Assign operator
   constexpr ParseError &operator=(ParseError const &other) {
     this->why = other.why;
     this->pos = other.pos;
@@ -149,6 +180,10 @@ private:
 };
 // ParseError end
 
+/**
+ *
+ *
+ */
 template <typename T, typename E> struct Result {
   bool has_val = false;
   union {
@@ -208,9 +243,11 @@ template <typename Fn> struct VerifyP : public Parser<VerifyP<Fn>, char> {
   constexpr auto to_fn_impl() const {
     auto fn_ = this->fn;
     return [fn_](std::istream &inp) -> Result<char, ParseError> {
-      if (!inp)
+      if (!inp) {
+        inp.clear();
         return ParseError("Reached end of file!",
                           ParseError::ErrorVariant::Recoverable, inp.tellg());
+      }
       const char val = inp.peek();
       if (fn_(val)) {
         inp.ignore();
@@ -275,7 +312,13 @@ struct Alternative : public Parser<Alternative<P1, P2>, Out> {
         return res1.err;
       }
       inp.seekg(pos);
-      return p2_impl(inp);
+      auto res2 = p2_impl(inp);
+      if (res2.has_val) {
+        return res2.ok;
+      } else {
+        inp.seekg(pos);
+        return res2.err;
+      }
     };
   }
 };
@@ -423,25 +466,29 @@ template <typename P> struct Peek : public Parser<Peek<P>, std::tuple<>> {
   }
 };
 
-// template <typename A, typename F,
-//           typename Out = std::invoke_result_t<typename F::value_type,
-//                                               typename A::value_type>>
-// struct Applicative : Parser<Applicative<A, F, Out>, Out> {
-//   const A p1;
-//   const F p2;
-//   constexpr Applicative(A const &p1, F const &p2) : p1(p1), p2(p2) {};
-//
-//   constexpr auto to_fn_impl() const {
-//     auto p1_impl = p1.to_fn();
-//     auto p2_impl = p2.to_fn();
-//
-//     return [p1_impl, p2_impl](std::istream &inp) -> Result<Out,
-//     ParseError> {
-//       auto val_r = p1_impl(&inp);
-//     };
-//   }
-// };
-//
+struct Take : public Parser<Take, std::string> {
+  const uint32_t cnt;
+  constexpr Take(uint32_t const &cnt) : cnt(cnt) {};
+  constexpr auto to_fn_impl() const {
+    auto cnt = this->cnt;
+    return [cnt](std::istream &inp) -> Result<std::string, ParseError> {
+      auto pos = inp.tellg();
+      char *buf = new char[cnt + 1];
+      memset(buf, 0, cnt + 1);
+      inp.read(buf, cnt);
+      if (cnt != inp.gcount()) {
+        inp.clear();
+        inp.seekg(pos);
+        return ParseError("Could not take " + std::to_string(cnt) +
+                              " characters!",
+                          ParseError::ErrorVariant::Recoverable, pos);
+      }
+      auto res = std::string(buf);
+      delete[] buf;
+      return res;
+    };
+  }
+};
 
 template <typename Res> consteval auto constant(Res const &res) {
   auto lambda = [res]() { return res; };
@@ -510,22 +557,66 @@ template <typename P> consteval auto cut(P const &p) { return Cut<P>(p); }
 
 template <typename P> consteval auto peek(P const &p) { return Peek<P>(p); }
 
+consteval auto take(uint32_t const &cnt) { return Take(cnt); }
+
+consteval auto string_p(std::string_view const &inp) {
+  return map(take(inp.size()), [inp](auto s) {
+    if (s == inp) {
+      return s;
+    } else {
+      throw std::exception();
+    }
+  });
+}
+
 template <typename Pars> consteval auto parse_fn(Pars const &parser) {
   return parser.to_fn();
 }
 
+constexpr bool is_digit(char const &c) { return std::isdigit(c); }
+constexpr bool is_alpha(char const &c) { return std::isalpha(c); }
+constexpr bool is_alphanumeric(char const &c) { return std::isalnum(c); }
+constexpr bool is_whitespace(char const &c) { return std::isspace(c); }
+constexpr bool is_hex_digit(char const &c) {
+  return ('0' <= c && '9' >= 'c') || ('A' <= c && 'F' >= c) ||
+         ('a' <= c && 'f' >= c);
+}
+
 consteval auto digit() {
-  return map(verify([](char const &c) { return isdigit(c); }),
+  return map(verify(&is_digit), [](char const &c) { return std::string{c}; });
+}
+
+consteval auto digits1() { return many1(digit()); }
+consteval auto digits0() { return many0(digit()); }
+
+consteval auto alphabetic() {
+  return map(verify(&is_alpha), [](char const &c) { return std::string{c}; });
+}
+consteval auto alphabetics1() { return many1(alphabetic()); }
+consteval auto alphabetics0() { return many0(alphabetic()); }
+
+consteval auto alphanumeric() {
+  return map(verify(&is_alphanumeric),
+             [](char const &c) { return std::string{c}; });
+}
+consteval auto alphanumerics1() { return many1(alphanumeric()); }
+consteval auto alphanumerics0() { return many0(alphanumeric()); }
+
+consteval auto hex_digit() {
+  return map(verify(&is_hex_digit),
              [](char const &c) { return std::string{c}; });
 }
 
+consteval auto hex_digits1() { return many1(hex_digit()); }
+consteval auto hex_digits0() { return many0(hex_digit()); }
+
 consteval auto ws0() {
-  return many0(map(verify([](const char &c) { return isspace(c); }),
-                   [](auto c) { return std::string{c}; }));
+  return many0(
+      map(verify(&is_whitespace), [](auto c) { return std::string{c}; }));
 }
 consteval auto ws1() {
-  return many1(map(verify([](const char &c) { return isspace(c); }),
-                   [](auto c) { return std::string{c}; }));
+  return many1(
+      map(verify(&is_whitespace), [](auto c) { return std::string{c}; }));
 }
 
 } // namespace parsum
