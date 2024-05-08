@@ -35,4 +35,4 @@ add_executable(DA2324_PRJ2_G163 main.cpp
         src/data/Data.cpp src/data/Data.h
         src/Runtime.cpp src/Runtime.h
 )
-target_compile_features(DA2324_PRJ2_G163 PUBLIC cxx_std_23)
+target_compile_features(DA2324_PRJ2_G163 PUBLIC cxx_std_20)
