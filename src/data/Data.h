@@ -18,18 +18,19 @@
 class Data {
 private:
   /// Graph with the data inside Info objects.
-  Graph<Info> g;
+  Graph<uint64_t> g;
 
 public:
   /**
    * @brief Constructor
    */
-  Data();
+  Data(std::string edge_filename);
+  Data(std::string edge_filename, std::string node_filename);
 
   /**
    * @brief Getter for the graph
    */
-  Graph<Info> &getGraph();
+  Graph<uint64_t> &getGraph();
 };
 
 #endif // DA2324_PRJ1_G163_DATA_H

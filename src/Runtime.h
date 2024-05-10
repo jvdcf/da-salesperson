@@ -27,22 +27,35 @@ public:
   };
   Kind kind;
   CommandLineValue(Kind k, auto v) : kind(k), value(v) {};
-  std::optional<std::string> getStr();
-  std::optional<uint32_t> getInt();
+  std::optional<std::string> getStr() {
+    if (this->kind == String)
+      return std::get<std::string>(this->value);
+    else
+      return {};
+  };
+  std::optional<uint32_t> getInt() {
+    if (this->kind == Int)
+      return std::get<uint32_t>(this->value);
+    else
+      return {};
+  };
+
   // static Parser<CommandLineValue> parse_ident();
 
   static consteval auto parse_int() {
-    return parsum::map(parsum::many1(parsum::digit()), [](std::string num) {
+    return parsum::map(parsum::digits1(), [](std::string num) {
       return CommandLineValue(Kind::Int, (uint32_t)std::stoul(num));
     });
   }
 
   static consteval auto parse_str() {
-    return parsum::map(
-        parsum::many1(parsum::map(
-            parsum::verify([](char const &c) { return isalnum(c); }),
-            [](char const &c) { return std::string{c}; })),
-        [](auto s) { return CommandLineValue(Kind::String, s); });
+    return parsum::map(parsum::alphanumerics1(), [](auto s) {
+      if (s.find_first_not_of("0123456789") != std::string::npos) {
+        return CommandLineValue(Kind::String, s);
+      } else {
+        throw std::exception();
+      }
+    });
   }
 
   static consteval auto parse_sep(char const &c) {
@@ -59,6 +72,7 @@ public:
   enum Cmd {
     Help,
     Quit,
+    Test,
   } command;
   std::vector<CommandLineValue> args;
   Command(Cmd typ, std::vector<CommandLineValue> args)
@@ -97,10 +111,6 @@ public:
   [[noreturn]] void run();
 
   static consteval auto parse_quit() {
-    // return ws().pair(string_p("quit")).pair(ws()).pmap<Command>([](auto inp)
-    // {
-    //   return Command(Command::Quit, {});
-    // });
     using parsum::string_p;
     return parsum::map(parsum::ws0() >> string_p("quit") >> parsum::ws0(),
                        [](auto c) { return Command(Command::Quit, {}); });
@@ -112,10 +122,25 @@ public:
                        [](auto c) { return Command(Command::Help, {}); });
   }
 
-  static consteval auto parse_cmd() { return parse_quit() | parse_help(); }
+  static consteval auto parse_test() {
+    using parsum::string_p;
+    return parsum::map(
+        parsum::ws0() >> string_p("test") >> parsum::ws1() >>
+            (CommandLineValue::parse_str() | CommandLineValue::parse_int()) >>
+            parsum::ws0(),
+        [](auto inp) {
+          auto [a, b, c, val, d] = inp;
+          return Command(Command::Test, {val});
+        });
+  }
+
+  static consteval auto parse_cmd() {
+    return parse_quit() | parse_help() | parse_test();
+  }
 
   void printHelp();
   void handleQuit();
+  void handleTest(Command const &cmd);
 };
 
 #endif // DA2324_PRJ1_G163_RUNTIME_H

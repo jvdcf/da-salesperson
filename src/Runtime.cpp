@@ -43,6 +43,19 @@ void Runtime::handleQuit() {
   exit(0);
 }
 
+void Runtime::handleTest(Command const &cmd) {
+  auto a = cmd.args;
+  auto argS = a[0].getStr();
+  auto argI = a[0].getInt();
+  if (argS.has_value()) {
+    std::cout << "String: " << Color(0xAA, 0xAA, 0xFF).foreground()
+              << argS.value() << Color::clear() << std::endl;
+  } else if (argI.has_value()) {
+    std::cout << "Integer: " << Color(0xAA, 0xAA, 0xFF).foreground()
+              << argI.value() << Color::clear() << std::endl;
+  }
+}
+
 void Runtime::processArgs(std::istream &args) {
   constexpr auto cmd_parser = parse_cmd();
   auto pos = args.tellg();
@@ -64,6 +77,8 @@ void Runtime::processArgs(std::istream &args) {
     return printHelp();
   case Command::Quit:
     return handleQuit();
+  case Command::Test:
+    return handleTest(cmd);
   default:
     error("AAAAAAAAAAAAAAAAAAAAAAA");
     break;

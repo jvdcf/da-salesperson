@@ -73,7 +73,9 @@ std::vector<Csv> parseCSVs(std::vector<std::string> paths) {
 }
 
 int main(int argc, char **argv) {
-  Data d;
+  if (argc != 2)
+    return 1;
+  Data d(argv[0]);
   Runtime rt(&d);
   rt.run();
   panic("main.cpp not implemented yet!");

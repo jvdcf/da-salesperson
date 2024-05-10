@@ -307,18 +307,24 @@ inline std::optional<std::string> CsvValues::get_str() {
 }
 
 inline std::optional<int64_t> CsvValues::get_int() {
-  if (variant != Integer) {
+  if (variant != Integer && variant != Float) {
     return {};
   } else {
-    return std::get<int64_t>(this->value);
+    if (variant == Float)
+      return (int64_t)std::get<double>(this->value);
+    else
+      return std::get<int64_t>(this->value);
   }
 }
 
 inline std::optional<double> CsvValues::get_flt() {
-  if (variant != Float) {
+  if (variant != Float && variant != Integer) {
     return {};
   } else {
-    return std::get<double>(this->value);
+    if (variant == Integer)
+      return (double)std::get<int64_t>(this->value);
+    else
+      return std::get<double>(this->value);
   }
 }
 #endif // CSV_H
