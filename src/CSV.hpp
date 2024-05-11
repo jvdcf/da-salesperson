@@ -30,9 +30,9 @@ public:
   /// Constructor
   CsvValues() : value(nullptr), variant(None) {};
 
-  std::optional<std::string> get_str();
-  std::optional<int64_t> get_int();
-  std::optional<double> get_flt();
+  std::optional<std::string> get_str() const;
+  std::optional<int64_t> get_int() const;
+  std::optional<double> get_flt() const;
   /// Helper function to display the contents of the CsvValue
   std::string display() {
     switch (variant) {
@@ -298,7 +298,7 @@ consteval auto parse_csv() {
   });
 }
 
-inline std::optional<std::string> CsvValues::get_str() {
+inline std::optional<std::string> CsvValues::get_str() const {
   if (variant != String) {
     return {};
   } else {
@@ -306,7 +306,7 @@ inline std::optional<std::string> CsvValues::get_str() {
   }
 }
 
-inline std::optional<int64_t> CsvValues::get_int() {
+inline std::optional<int64_t> CsvValues::get_int() const {
   if (variant != Integer && variant != Float) {
     return {};
   } else {
@@ -317,7 +317,7 @@ inline std::optional<int64_t> CsvValues::get_int() {
   }
 }
 
-inline std::optional<double> CsvValues::get_flt() {
+inline std::optional<double> CsvValues::get_flt() const {
   if (variant != Float && variant != Integer) {
     return {};
   } else {
