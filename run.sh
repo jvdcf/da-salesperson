@@ -8,6 +8,10 @@ txtpur=$(tput setaf 5) # Purple
 txtcyn=$(tput setaf 6) # Cyan
 txtwht=$(tput setaf 7) # White
 
+# Break if any command fails
+set -e 
+set -o pipefail
+
 echo -e "${txtgrn}[1/3] Converting CMake to Makefile ${txtwht}"
 mkdir -p bin
 cd bin/
@@ -20,5 +24,5 @@ cd ..
 clear
 
 echo -e "${txtgrn}[3/3] Executing DA2324_PRJ2_G163 ${txtwht}"
-sh -c "rlwrap ./bin/DA2324_PRJ2_G163 $(pwd)/$1"
+sh -c "./bin/DA2324_PRJ2_G163 $1 $2"
 
