@@ -51,11 +51,11 @@ void Data::parseCsv(const std::string& path, Graph<Info>& graph, const std::func
   constexpr auto parser = parse_line().to_fn();
   unsigned num_lines = Utils::countLines(path);
   std::istringstream input = prepareCsv(path);
-  auto res = parser(input); // Ignore header line
-  for (unsigned l = 1; l < num_lines; l++) {
+  auto res = parsum::Result<CsvLine, parsum::ParseError>(CsvLine());
+  for (unsigned l = 0; l < num_lines; l++) {
     res = parser(input);
     std::vector<CsvValues> line = res.ok.get_data();
-    if (!saveFn(line, graph)) error("Failed to parse line " + std::to_string(l) + " in " + path);
+    if (!saveFn(line, graph) && l > 0) error("Failed to parse line " + std::to_string(l) + " in " + path);
     Utils::printLoading(l, num_lines, "Loading " + path);
   }
   Utils::clearLine();
