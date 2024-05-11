@@ -64,7 +64,7 @@ public:
   }
 
 private:
-  std::variant<uint32_t, std::string, std::pair<Info::Kind, uint32_t>> value;
+  std::variant<std::string, uint32_t> value;
 };
 
 class Command {
