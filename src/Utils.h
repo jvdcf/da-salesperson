@@ -15,7 +15,12 @@
 
 class Utils {
 public:
-  // TODO
+  unsigned static countLines(const std::string& path);
+  void static printLoading(unsigned current, unsigned total, const std::string& path);
+  void static clearLine();
+
+  double static convertToRadians(double angle);
+  double static haversineDistance(double lat1, double lon1, double lat2, double lon2);
 };
 
 

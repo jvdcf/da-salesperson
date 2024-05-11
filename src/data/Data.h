@@ -8,6 +8,7 @@
 #include <optional>
 #include <string>
 #include <variant>
+#include <functional>
 
 /**
  * @brief Data storage and algorithms execution.
@@ -18,19 +19,25 @@
 class Data {
 private:
   /// Graph with the data inside Info objects.
-  Graph<uint64_t> g;
+  Graph<Info> g;
+
+  std::istringstream prepareCsv(const std::string& path);
+  bool static saveEdge(std::vector<CsvValues> line, Graph<Info>& g);
+  bool static saveNode(std::vector<CsvValues> line, Graph<Info>& g);
+  void parseCsv(const std::string &path, Graph<Info> &g,
+                const std::function<bool(std::vector<CsvValues>, Graph<Info> &)> &saveFn);
 
 public:
   /**
    * @brief Constructor
    */
-  Data(std::string edge_filename);
-  Data(std::string edge_filename, std::string node_filename);
+  explicit Data(const std::string& edge_filename);
+  Data(const std::string& edge_filename, const std::string& node_filename);
 
   /**
    * @brief Getter for the graph
    */
-  Graph<uint64_t> &getGraph();
+  Graph<Info> &getGraph();
 };
 
 #endif // DA2324_PRJ1_G163_DATA_H
