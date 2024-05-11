@@ -244,7 +244,6 @@ template <typename Fn> struct VerifyP : public Parser<VerifyP<Fn>, char> {
     auto fn_ = this->fn;
     return [fn_](std::istream &inp) -> Result<char, ParseError> {
       if (!inp) {
-        inp.clear();
         return ParseError("Reached end of file!",
                           ParseError::ErrorVariant::Recoverable, inp.tellg());
       }
@@ -347,7 +346,7 @@ struct Map : public Parser<Map<P, F>, Out> {
       } catch (std::exception &) {
         inp.seekg(pos);
         return ParseError("Map failed", ParseError::ErrorVariant::Recoverable,
-                          inp.tellg());
+                          pos);
       }
     };
   }
@@ -459,6 +458,7 @@ template <typename P> struct Peek : public Parser<Peek<P>, std::tuple<>> {
       auto res = p_impl(inp);
       if (res.has_val) {
         inp.seekg(pos);
+        inp.clear();
         return std::tuple<>{};
       }
       return res.err;
@@ -479,6 +479,7 @@ struct Take : public Parser<Take, std::string> {
       if (cnt != inp.gcount()) {
         inp.clear();
         inp.seekg(pos);
+        inp.clear();
         return ParseError("Could not take " + std::to_string(cnt) +
                               " characters!",
                           ParseError::ErrorVariant::Recoverable, pos);
