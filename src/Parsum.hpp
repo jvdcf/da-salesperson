@@ -244,7 +244,6 @@ template <typename Fn> struct VerifyP : public Parser<VerifyP<Fn>, char> {
     auto fn_ = this->fn;
     return [fn_](std::istream &inp) -> Result<char, ParseError> {
       if (!inp) {
-        inp.clear();
         return ParseError("Reached end of file!",
                           ParseError::ErrorVariant::Recoverable, inp.tellg());
       }
@@ -278,13 +277,11 @@ struct Sequence : public Parser<Sequence<P1, P2>, Out> {
       auto res1 = p1_impl(inp);
       if (!res1.has_val) {
         inp.seekg(pos);
-        inp.clear();
         return res1.err;
       }
       auto res2 = p2_impl(inp);
       if (!res2.has_val) {
         inp.seekg(pos);
-        inp.clear();
         return res2.err;
       }
       return join_tup(res1.ok, res2.ok);
@@ -311,17 +308,14 @@ struct Alternative : public Parser<Alternative<P1, P2>, Out> {
         return res1.ok;
       else if (res1.err.get_kind() == ParseError::ErrorVariant::Irrecoverable) {
         inp.seekg(pos);
-        inp.clear();
         return res1.err;
       }
       inp.seekg(pos);
-      inp.clear();
       auto res2 = p2_impl(inp);
       if (res2.has_val) {
         return res2.ok;
       } else {
         inp.seekg(pos);
-        inp.clear();
         return res2.err;
       }
     };
@@ -345,14 +339,12 @@ struct Map : public Parser<Map<P, F>, Out> {
       auto res = p_impl(inp);
       if (!res.has_val) {
         inp.seekg(pos);
-        inp.clear();
         return res.err;
       }
       try {
         return fn(res.ok);
       } catch (std::exception &) {
         inp.seekg(pos);
-        inp.clear();
         return ParseError("Map failed", ParseError::ErrorVariant::Recoverable,
                           pos);
       }
@@ -378,7 +370,6 @@ struct Context : public Parser<Context<P, F>, typename P::value_type> {
       if (res.has_val)
         return res.ok;
       inp.seekg(pos);
-      inp.clear();
       try {
         return fn(res.err);
       } catch (std::exception &) {
@@ -403,7 +394,6 @@ template <typename P, typename Out> struct Many1 : Parser<Many1<P, Out>, Out> {
       auto fst = p_impl(inp);
       if (!fst.has_val) {
         inp.seekg(pos_1);
-        inp.clear();
         return fst.err;
       }
       Out tgt = fst.ok;
@@ -412,7 +402,6 @@ template <typename P, typename Out> struct Many1 : Parser<Many1<P, Out>, Out> {
         auto nxt = p_impl(inp);
         if (!nxt.has_val) {
           inp.seekg(pos);
-          inp.clear();
           if (nxt.err.get_kind() == ParseError::ErrorVariant::Irrecoverable) {
             return nxt.err;
           }
