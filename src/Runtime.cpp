@@ -35,6 +35,20 @@ void Runtime::printHelp() {
             << comment << "      Quits this program.\n"
             << keyword << "  help\n"
             << comment << "      Prints this help.\n"
+            << keyword << "  count\n"
+            << comment << "      Prints the number of vertices and edges.\n"
+            << keyword << "  backtracking\n"
+            << comment << "      Resolves the TSP problem using backtracking.\n"
+            << comment << "      If the graph is not complete, this command will generate the remaining edges using the coordinates inside nodes.csv.\n"
+            << keyword << "  triangular\n"
+            << comment << "      Generates an approximation of the TSP problem using the triangular heuristic.\n"
+            << comment << "      If the graph is not complete, this command will generate the remaining edges using the coordinates inside nodes.csv.\n"
+            << keyword << "  heuristic\n"
+            << comment << "      Generates an approximation of the TSP problem using // TODO.\n"
+            << comment << "      If the graph is not complete, this command will generate the remaining edges using the coordinates inside nodes.csv.\n"
+            << keyword << "  disconnected <vertex-id>\n"
+            << comment << "      Generates an approximation of the TSP problem using // TODO.\n"
+            << comment << "      This command will not assume any edge not given by the .csv files.\n"
             << Color::clear() << std::endl;
 }
 
@@ -54,6 +68,37 @@ void Runtime::handleTest(Command const &cmd) {
     std::cout << "Integer: " << Color(0xAA, 0xAA, 0xFF).foreground()
               << argI.value() << Color::clear() << std::endl;
   }
+}
+
+void Runtime::handleCount() {
+  auto &g = data->getGraph();
+  unsigned int edgeCount = 0;
+  for (Vertex<Info>* v : g.getVertexSet()) {
+    edgeCount += v->getAdj().size();
+  }
+  std::cout << "Number of vertices: " << g.getVertexSet().size() << std::endl;
+  std::cout << "Number of edges: " << edgeCount << std::endl;
+}
+
+void Runtime::handleBacktracking() {
+  // TODO
+  error("To be implemented.");
+}
+
+void Runtime::handleTriangular() {
+  // TODO
+  error("To be implemented.");
+}
+
+void Runtime::handleHeuristic() {
+  // TODO
+  error("To be implemented.");
+}
+
+void Runtime::handleDisconnected(Command &cmd) {
+  unsigned vertexId = cmd.args.at(0).getInt().value();
+  // TODO
+  error("To be implemented.");
 }
 
 void Runtime::processArgs(std::istream &args) {
@@ -77,6 +122,16 @@ void Runtime::processArgs(std::istream &args) {
     return printHelp();
   case Command::Quit:
     return handleQuit();
+  case Command::Count:
+    return handleCount();
+  case Command::Backtracking:
+    return handleBacktracking();
+  case Command::Triangular:
+    return handleTriangular();
+  case Command::Heuristic:
+    return handleHeuristic();
+  case Command::Disconnected:
+    return handleDisconnected(cmd);
   case Command::Test:
     return handleTest(cmd);
   default:

@@ -72,6 +72,11 @@ public:
   enum Cmd {
     Help,
     Quit,
+    Count,
+    Backtracking,
+    Triangular,
+    Heuristic,
+    Disconnected,
     Test,
   } command;
   std::vector<CommandLineValue> args;
@@ -134,12 +139,53 @@ public:
         });
   }
 
+  static consteval auto parse_count() {
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("count") >> parsum::ws0(),
+                       [](auto c) { return Command(Command::Count, {}); });
+  }
+
+  static consteval auto parse_backtracking() {
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("backtracking") >> parsum::ws0(),
+                       [](auto c) { return Command(Command::Backtracking, {}); });
+  }
+
+  static consteval auto parse_triangular() {
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("triangular") >> parsum::ws0(),
+                       [](auto c) { return Command(Command::Triangular, {}); });
+  }
+
+  static consteval auto parse_heuristic() {
+    using parsum::string_p;
+    return parsum::map(parsum::ws0() >> string_p("heuristic") >> parsum::ws0(),
+                       [](auto c) { return Command(Command::Heuristic, {}); });
+  }
+
+  static consteval auto parse_disconnected() {
+    using parsum::string_p;
+    return parsum::map(
+            parsum::ws0() >> string_p("disconnected") >> parsum::ws1() >>
+            CommandLineValue::parse_int() >> parsum::ws0(),
+            [](auto inp) {
+              auto [a, b, c, val, d] = inp;
+              return Command(Command::Disconnected, {val}); });
+  }
+
   static consteval auto parse_cmd() {
-    return parse_quit() | parse_help() | parse_test();
+    return parse_quit() | parse_help()
+         | parse_count() | parse_backtracking() | parse_triangular() | parse_heuristic() | parse_disconnected()
+         | parse_test();
   }
 
   void printHelp();
   void handleQuit();
+  void handleCount();
+  void handleBacktracking();
+  void handleTriangular();
+  void handleHeuristic();
+  void handleDisconnected(Command &cmd);
   void handleTest(Command const &cmd);
 };
 
