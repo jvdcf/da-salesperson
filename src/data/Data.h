@@ -8,16 +8,17 @@
 #include <optional>
 #include <string>
 #include <variant>
-#include <functional>
+
+typedef bool (*savefn_t)(std::vector<CsvValues> const &, Graph<Info> &);
 
 struct TSPResult {
   std::vector<Info> path;
   double cost;
 
-  friend std::ostream& operator<<(std::ostream& os, const TSPResult& res) {
+  friend std::ostream &operator<<(std::ostream &os, const TSPResult &res) {
     os << "Cost: " << res.cost << std::endl;
     os << "Path: ";
-    for (const auto& i : res.path) {
+    for (const auto &i : res.path) {
       os << i.getId() << " ";
     }
     return os;
@@ -35,18 +36,17 @@ private:
   /// Graph with the data inside Info objects.
   Graph<Info> g;
 
-  std::istringstream prepareCsv(const std::string& path);
-  bool static saveEdge(std::vector<CsvValues> line, Graph<Info>& g);
-  bool static saveNode(std::vector<CsvValues> line, Graph<Info>& g);
-  void parseCsv(const std::string &path, Graph<Info> &g,
-                const std::function<bool(std::vector<CsvValues>, Graph<Info> &)> &saveFn);
+  std::istringstream prepareCsv(const std::string &path);
+  bool static saveEdge(std::vector<CsvValues> const &line, Graph<Info> &g);
+  bool static saveNode(std::vector<CsvValues> const &line, Graph<Info> &g);
+  void parseCsv(const std::string &path, Graph<Info> &g, const savefn_t saveFn);
 
 public:
   /**
    * @brief Constructor
    */
-  explicit Data(const std::string& edge_filename);
-  Data(const std::string& edge_filename, const std::string& node_filename);
+  explicit Data(const std::string &edge_filename);
+  Data(const std::string &edge_filename, const std::string &node_filename);
 
   /**
    * @brief Getter for the graph
