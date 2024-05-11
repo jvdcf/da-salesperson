@@ -32,7 +32,7 @@ jobs:
             cpp_compiler: g++-13
           - os: ubuntu-latest
             c_compiler: clang
-            cpp_compiler: clang++
+            cpp_compiler: clang++-17
 
     steps:
       - uses: actions/checkout@v4
