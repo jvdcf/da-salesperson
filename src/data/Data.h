@@ -10,6 +10,20 @@
 #include <variant>
 #include <functional>
 
+struct TSPResult {
+  std::vector<Info> path;
+  double cost;
+
+  friend std::ostream& operator<<(std::ostream& os, const TSPResult& res) {
+    os << "Cost: " << res.cost << std::endl;
+    os << "Path: ";
+    for (const auto& i : res.path) {
+      os << i.getId() << " ";
+    }
+    return os;
+  }
+};
+
 /**
  * @brief Data storage and algorithms execution.
  * @details This class is responsible for storing the data and executing the
@@ -38,6 +52,11 @@ public:
    * @brief Getter for the graph
    */
   Graph<Info> &getGraph();
+
+  TSPResult backtracking();
+  TSPResult triangular();
+  TSPResult heuristic();
+  std::optional<TSPResult> disconnected(uint64_t vertexId);
 };
 
 #endif // DA2324_PRJ1_G163_DATA_H

@@ -74,5 +74,28 @@ Data::Data(const std::string& edge_filename, const std::string& node_filename) {
 
 Graph<Info> &Data::getGraph() { return g; }
 
-// Functions
-// =================================================================================================
+// Functions ====================================================================================================
+
+TSPResult Data::backtracking() {
+  // TODO
+  error("Not yet implemented");
+  return {};
+}
+
+TSPResult Data::triangular() {
+  // TODO
+  error("Not yet implemented");
+  return {};
+}
+
+TSPResult Data::heuristic() {
+  // TODO
+  error("Not yet implemented");
+  return {};
+}
+
+std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
+  // TODO
+  error("Not yet implemented");
+  return {};
+}

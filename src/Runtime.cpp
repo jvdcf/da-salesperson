@@ -82,24 +82,30 @@ void Runtime::handleCount() {
 }
 
 void Runtime::handleBacktracking() {
-  // TODO
-  error("To be implemented.");
+  std::cout << data->backtracking() << std::endl;
 }
 
 void Runtime::handleTriangular() {
-  // TODO
-  error("To be implemented.");
+  std::cout << data->triangular() << std::endl;
 }
 
 void Runtime::handleHeuristic() {
-  // TODO
-  error("To be implemented.");
+  std::cout << data->heuristic() << std::endl;
 }
 
 void Runtime::handleDisconnected(Command &cmd) {
   unsigned vertexId = cmd.args.at(0).getInt().value();
-  // TODO
-  error("To be implemented.");
+  Graph<Info> &g = data->getGraph();
+  if (g.findVertex(Info(vertexId)) == nullptr) {
+    error("Vertex " + std::to_string(vertexId) + " does not exist.");
+    return;
+  }
+  auto result = data->disconnected(vertexId);
+  if (!result.has_value()) {
+    info("No hamiltonian path starting at vertex " + std::to_string(vertexId) + " was found.");
+  } else {
+    std::cout << result.value() << std::endl;
+  }
 }
 
 void Runtime::processArgs(std::istream &args) {
