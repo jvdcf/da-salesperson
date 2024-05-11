@@ -1,12 +1,10 @@
 #include "Runtime.h"
-#include "Parsum.hpp"
 #include "Utils.h"
 #include <iostream>
 #include <istream>
 #include <ostream>
 #include <sstream>
 #include <string>
-#include <atomic>
 
 Runtime::Runtime(Data *d) { this->data = d; }
 
@@ -56,19 +54,6 @@ void Runtime::printHelp() {
 void Runtime::handleQuit() {
   info("Quitting...");
   exit(0);
-}
-
-void Runtime::handleTest(Command const &cmd) {
-  auto a = cmd.args;
-  auto argS = a[0].getStr();
-  auto argI = a[0].getInt();
-  if (argS.has_value()) {
-    std::cout << "String: " << Color(0xAA, 0xAA, 0xFF).foreground()
-              << argS.value() << Color::clear() << std::endl;
-  } else if (argI.has_value()) {
-    std::cout << "Integer: " << Color(0xAA, 0xAA, 0xFF).foreground()
-              << argI.value() << Color::clear() << std::endl;
-  }
 }
 
 void Runtime::handleCount() {
@@ -145,11 +130,7 @@ void Runtime::processArgs(std::istream &args) {
   case Command::Disconnected:
     handleDisconnected(cmd);
     break;
-  case Command::Test:
-    handleTest(cmd);
-    break;
   default:
-    error("AAAAAAAAAAAAAAAAAAAAAAA");
     info("Type 'help' to see the available commands.");
     return;
   }

@@ -77,7 +77,6 @@ public:
     Triangular,
     Heuristic,
     Disconnected,
-    Test,
   } command;
   std::vector<CommandLineValue> args;
   Command(Cmd typ, std::vector<CommandLineValue> args)
@@ -129,18 +128,6 @@ public:
                        [](auto c) { return Command(Command::Help, {}); });
   }
 
-  static consteval auto parse_test() {
-    using parsum::string_p;
-    return parsum::map(
-        parsum::ws0() >> string_p("test") >> parsum::ws1() >>
-            (CommandLineValue::parse_str() | CommandLineValue::parse_int()) >>
-            parsum::ws0(),
-        [](auto inp) {
-          auto [a, b, c, val, d] = inp;
-          return Command(Command::Test, {val});
-        });
-  }
-
   static consteval auto parse_count() {
     using parsum::string_p;
     return parsum::map(parsum::ws0() >> string_p("count") >> parsum::ws0(),
@@ -177,8 +164,7 @@ public:
 
   static consteval auto parse_cmd() {
     return parse_quit() | parse_help()
-         | parse_count() | parse_backtracking() | parse_triangular() | parse_heuristic() | parse_disconnected()
-         | parse_test();
+         | parse_count() | parse_backtracking() | parse_triangular() | parse_heuristic() | parse_disconnected();
   }
 
   void printHelp();
@@ -188,7 +174,6 @@ public:
   void handleTriangular();
   void handleHeuristic();
   void handleDisconnected(Command &cmd);
-  void handleTest(Command const &cmd);
 };
 
 #endif // DA2324_PRJ1_G163_RUNTIME_H
