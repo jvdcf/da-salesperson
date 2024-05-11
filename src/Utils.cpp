@@ -30,6 +30,27 @@ void warning(std::string s) {
   std::cerr << c.foreground() <<"[WARNING] " << c.clear() << s << std::endl;
 }
 
+// Clock class =================================================================
+
+Clock::Clock() {
+  this->start_time = std::chrono::high_resolution_clock::now();
+  this->end_time = std::chrono::high_resolution_clock::now();
+}
+
+void Clock::start() {
+  this->start_time = std::chrono::high_resolution_clock::now();
+}
+
+void Clock::stop() {
+  this->end_time = std::chrono::high_resolution_clock::now();
+}
+
+double Clock::getTime() const {
+  auto duration = this->end_time - this->start_time;
+  long microseconds = std::chrono::duration_cast<std::chrono::microseconds>(duration).count();
+  return (double)microseconds / 1000.0;
+}
+
 // Terminal Utils ==============================================================
 
 unsigned Utils::countLines(const std::string& path) {

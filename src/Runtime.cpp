@@ -6,6 +6,7 @@
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <atomic>
 
 Runtime::Runtime(Data *d) { this->data = d; }
 
@@ -28,8 +29,8 @@ Runtime::Runtime(Data *d) { this->data = d; }
 }
 
 void Runtime::printHelp() {
-  auto keyword = Color(0, 255, 0).foreground();
-  auto comment = Color(255, 255, 15).foreground();
+  auto keyword = Color(166, 209, 137).foreground();
+  auto comment = Color(249, 226, 175).foreground();
   std::cout << "Available commands:\n"
             << keyword << "  quit\n"
             << comment << "      Quits this program.\n"
@@ -117,6 +118,8 @@ void Runtime::processArgs(std::istream &args) {
   std::string rest(std::istreambuf_iterator<char>(args), {});
   if (!rest.empty())
     warning("Trailing output: '" + rest + "'.");
+
+  clock.start();
   switch (cmd.command) {
   case Command::Help:
     return printHelp();
@@ -125,19 +128,25 @@ void Runtime::processArgs(std::istream &args) {
   case Command::Count:
     return handleCount();
   case Command::Backtracking:
-    return handleBacktracking();
+    handleBacktracking();
+    break;
   case Command::Triangular:
-    return handleTriangular();
+    handleTriangular();
+    break;
   case Command::Heuristic:
-    return handleHeuristic();
+    handleHeuristic();
+    break;
   case Command::Disconnected:
-    return handleDisconnected(cmd);
+    handleDisconnected(cmd);
+    break;
   case Command::Test:
-    return handleTest(cmd);
+    handleTest(cmd);
+    break;
   default:
     error("AAAAAAAAAAAAAAAAAAAAAAA");
-    break;
+    info("Type 'help' to see the available commands.");
+    return;
   }
-
-  info("Type 'help' to see the available commands.");
+  clock.stop();
+  std::cout << Color(183, 189, 248).foreground() << "Time elapsed: " << clock << Color::clear() << std::endl;
 }

@@ -93,6 +93,8 @@ class Runtime {
 private:
   /// Pointer to a Data object. Used to call their methods.
   Data *data;
+  /// Clock object to measure the time of the algorithms.
+  Clock clock;
 
   /**
    * @brief From a list of arguments, process them and call the appropriate
