@@ -87,10 +87,10 @@ TSPResult Data::backtracking() {
 
 TSPResult Data::triangular() {
   // Prim's algorithm - Minimum Spanning Tree
-  std::vector<Vertex<Info> *> mst = Utils::prim(&g);
+  Utils::prim(&g);
 
   // DFS - Depth First Search in the MST
-  std::vector<Vertex<Info> *> dfs = Utils::MSTdfs(mst);
+  std::vector<Vertex<Info> *> dfs = Utils::MSTdfs(g.getVertexSet());
 
   // Add the first vertex to the end of the path
   dfs[0]->setPath(g.findEdge(dfs[dfs.size() - 1]->getInfo(), dfs[0]->getInfo()));
