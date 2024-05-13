@@ -105,6 +105,7 @@ public:
     * Auxiliary function to find a vertex with a given the content.
     */
     Vertex<T> *findVertex(const T &in) const;
+    Edge<T> *findEdge(const T &sourc, const T &dest) const;
     /*
      *  Adds a vertex with a given content or info (in) to a graph (this).
      *  Returns true if successful, and false if a vertex with that content already exists.
@@ -374,6 +375,19 @@ Vertex<T> * Graph<T>::findVertex(const T &in) const {
     for (auto v : vertexSet)
         if (v->getInfo() == in)
             return v;
+    return nullptr;
+}
+
+template<class T>
+Edge<T> *Graph<T>::findEdge(const T &sourc, const T &dest) const {
+    auto v = findVertex(sourc);
+    if (v != nullptr) {
+        for (auto e : v->getAdj()) {
+            if (e->getDest()->getInfo() == dest) {
+                return e;
+            }
+        }
+    }
     return nullptr;
 }
 

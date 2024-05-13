@@ -22,6 +22,12 @@ public:
 
   static double convertToRadians(double angle);
   static double haversineDistance(double lat1, double lon1, double lat2, double lon2);
+
+  static std::vector<Vertex<Info> *> prim(Graph<Info> *g);
+
+  static std::vector<Vertex<Info> *> MSTdfs(const std::vector<Vertex<Info> *>& vertexSet);
+
+  static void dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> &res);
 };
 
 

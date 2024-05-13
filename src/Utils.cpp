@@ -90,3 +90,60 @@ double Utils::haversineDistance(double lat1, double lon1, double lat2, double lo
 
   return R * c;
 }
+
+std::vector<Vertex<Info> *> Utils::prim(Graph<Info> * g) {
+
+    MutablePriorityQueue<Vertex<Info>> q;
+
+    for (Vertex<Info>* v: g->getVertexSet()){
+        v->setVisited(false);
+        v->setDist(INF);
+    }
+
+    Info info(0);
+    Vertex<Info>* vertex= g->findVertex(info); //start with vertex 0
+    vertex->setDist(0);
+    q.insert(vertex);
+
+    while (!q.empty()){
+        Vertex<Info> * v = q.extractMin();
+        v->setVisited(true);
+        for (Edge<Info>* e: v->getAdj()){
+            if (!e->getDest()->isVisited() && e->getWeight() < e->getDest()->getDist()){
+                e->getDest()->setDist(e->getWeight());
+                q.insert(e->getDest());
+                e->getDest()->setPath(e);
+            }
+        }
+    }
+
+    return g->getVertexSet();
+}
+
+std::vector<Vertex<Info>*> Utils::MSTdfs(const std::vector<Vertex<Info> *>& vertexSet){
+    std::vector<Vertex<Info>*> res;
+    for (auto v : vertexSet)
+        v->setVisited(false);
+
+    for (auto v : vertexSet)
+        if (!v->isVisited())
+            dfsVisit(v, res);
+
+    return res;
+}
+
+void Utils::dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
+    v->setVisited(true);
+    res.push_back(v);
+    for (auto e : v->getAdj()) {
+        auto dest = e->getDest();
+        if (dest->getPath()!= nullptr){
+            if (dest->getPath()->getOrig() == v) {
+                if (!dest->isVisited()) {
+                    dfsVisit(dest, res);
+                }
+            }
+        }
+    }
+}
+

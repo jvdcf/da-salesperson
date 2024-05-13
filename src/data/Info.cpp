@@ -8,7 +8,7 @@ Info::Info(uint64_t id) {
   this->lon = std::nullopt;
 }
 
-Info::Info(uint64_t id, double lat, double lon) {
+Info::Info(uint64_t id, double  lat, double lon) {
   this->id = id;
   this->lat = lat;
   this->lon = lon;

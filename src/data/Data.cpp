@@ -86,9 +86,24 @@ TSPResult Data::backtracking() {
 }
 
 TSPResult Data::triangular() {
-  // TODO
-  error("Not yet implemented");
-  return {};
+  // Prim's algorithm - Minimum Spanning Tree
+  std::vector<Vertex<Info> *> mst = Utils::prim(&g);
+
+  // DFS - Depth First Search in the MST
+  std::vector<Vertex<Info> *> dfs = Utils::MSTdfs(mst);
+
+  // Add the first vertex to the end of the path
+  dfs[0]->setPath(g.findEdge(dfs[dfs.size() - 1]->getInfo(), dfs[0]->getInfo()));
+
+  // Calculate the cost and the path
+  double totalCost = 0;
+  std::vector<Info> path;
+  for (auto v : dfs) {
+      totalCost += v->getPath()->getWeight();
+      path.push_back(v->getInfo());
+  }
+
+  return TSPResult{path, totalCost};
 }
 
 TSPResult Data::heuristic() {
