@@ -25,6 +25,10 @@ struct TSPResult {
     }
     return os;
   }
+
+  bool operator<(const TSPResult &res) const {
+    return this->cost < res.cost;
+  }
 };
 
 /**

@@ -6,6 +6,7 @@
 #include <sstream>
 #include <string>
 #include <climits>
+#include <cfloat>
 
 // Constructors
 // ====================================================================================================
@@ -80,77 +81,60 @@ Graph<Info> &Data::getGraph() { return g; }
 // Functions
 // ====================================================================================================
 
-struct BTPossibility {
-  double cost;                            // Current cost of all edges selected until now
-  std::queue<Edge<Info>*> possibleEdges;  // Edges that can be selected if this edge is ignored (the first edge is the one being considered)
-  std::vector<Info> path;                 // Path of vertices selected until now
-};
-
-std::queue<Edge<Info>*> generatePossibleEdges(Graph<Info>& g, Vertex<Info>* v, const std::vector<Info>& path) {
-  std::queue<Edge<Info> *> possibleEdges;
-  if (path.size() == g.getNumVertex()) {  // If all vertices have been visited, add edge to start
+std::vector<Edge<Info>*> generatePossibleEdges(Graph<Info>& g, Vertex<Info>* v, const std::vector<Info>& path) {
+  std::vector<Edge<Info> *> possibleEdges;
+  if (path.size() == g.getNumVertex() - 1) {  // If all vertices have been visited, add edge to start
     for (Edge<Info> *e: v->getAdj()) {
       if (e->getDest()->getInfo().getId() == START_VERTEX) {
-        possibleEdges.push(e);
+        possibleEdges.push_back(e);
         break;
       }
     }
   } else {
     for (Edge<Info> *e: v->getAdj()) { // Add all edges that their destination vertex hasn't been visited yet
+      if (e->getDest()->getInfo().getId() == START_VERTEX) continue;
       if (std::find(path.begin(), path.end(), e->getDest()->getInfo()) != path.end()) continue;
-      possibleEdges.push(e);
+      possibleEdges.push_back(e);
     }
   }
   return possibleEdges;
 }
 
-TSPResult btDFS(Graph<Info>& g, const BTPossibility& p, double bestCost) {
+TSPResult btDFS(Graph<Info>& g, const TSPResult& p, Vertex<Info>* v, double& bestCost) {
+  std::vector<Edge<Info>*> possibleEdges = generatePossibleEdges(g, v, p.path);
+  TSPResult bestResult = {DBL_MAX, {}};
+
   // Base cases
-  if (p.possibleEdges.empty()) {
-    if (p.path.size() == g.getNumVertex() + 1) {
-      if (p.cost < bestCost) bestCost = p.cost;
-      return {p.cost, p.path};    // Hamiltonian cycle complete
-    } else {
-      return {UINT_MAX, p.path};  // Invalid path
-    }
+  if (p.path.size() == g.getNumVertex()) {
+    if (p.cost < bestCost) bestCost = p.cost;
+    return {p.cost, p.path};    // Hamiltonian cycle complete
   }
 
   // Bounding
-  if (p.cost >= bestCost) return {UINT_MAX, p.path};
+  if (p.cost >= bestCost) return bestResult;
 
-  Edge<Info>* e = p.possibleEdges.front();
-  std::queue<Edge<Info>*> possibleEdges = p.possibleEdges;
-  double cost = p.cost;
-  std::vector<Info> path = p.path;
-  BTPossibility next;
+  // Generate results and pick the best one
+  for (Edge<Info>* e: possibleEdges) {
+    double nextCost = p.cost + e->getWeight();
+    auto nextPath = p.path;
+    Vertex<Info>* nextVertex = e->getDest();
+    nextPath.push_back(nextVertex->getInfo());
+    TSPResult next = {nextCost, nextPath};
+    auto result = btDFS(g, next, nextVertex, bestCost);
+    if (result < bestResult) bestResult = result;
+  }
 
-  // Left choice: add edge to path
-  double leftCost = cost + e->getWeight();
-  auto leftPath = path;
-  leftPath.push_back(e->getDest()->getInfo());
-  auto leftPossibleEdges = generatePossibleEdges(g, e->getDest(), leftPath);
-  next = {leftCost, leftPossibleEdges, leftPath};
-  auto leftResult = btDFS(g, next, bestCost);
-
-  // Right choice: skip edge
-  auto rightPossibleEdges = possibleEdges;
-  rightPossibleEdges.pop();
-  next = {cost, rightPossibleEdges, path};
-  auto rightResult = btDFS(g, next, bestCost);
-
-  // Select best choice
-  if (leftResult.cost <= rightResult.cost) return leftResult;
-  else return rightResult;
+  return bestResult;
 }
 
 TSPResult Data::backtracking() {
   Vertex<Info>* start = g.findVertex(Info(START_VERTEX));
+  TSPResult p = {0, {}};
+  auto bestCost = DBL_MAX;
 
-  std::queue<Edge<Info>*> possibleEdges = generatePossibleEdges(g, start, {start->getInfo()});
-  BTPossibility p = {0, possibleEdges, {start->getInfo()}};
-  double bestCost = UINT_MAX;
-
-  return btDFS(g, p, bestCost);
+  TSPResult res = btDFS(g, p, start, bestCost);
+  res.path.insert(res.path.begin(), Info(START_VERTEX));
+  return res;
 }
 
 // ====================================================================================================
