@@ -86,6 +86,8 @@ TSPResult Data::backtracking() {
 }
 
 TSPResult Data::triangular() {
+  Utils::makeFullyConnected(&g);
+
   // Prim's algorithm - Minimum Spanning Tree
   Utils::prim(&g);
 
@@ -93,15 +95,30 @@ TSPResult Data::triangular() {
   std::vector<Vertex<Info> *> dfs = Utils::MSTdfs(g.getVertexSet());
 
   // Add the first vertex to the end of the path
-  dfs[0]->setPath(g.findEdge(dfs[dfs.size() - 1]->getInfo(), dfs[0]->getInfo()));
+  auto finalEdge = g.findEdge(dfs[dfs.size() - 1]->getInfo(), dfs[0]->getInfo());
+  dfs[0]->setPath(finalEdge);
+
+//380
+
+//  Cost: 269
+//  Path: 0 1 2 10 5 4 8 7 6 9 3
 
   // Calculate the cost and the path
   double totalCost = 0;
   std::vector<Info> path;
-  for (auto v : dfs) {
-      totalCost += v->getPath()->getWeight();
-      path.push_back(v->getInfo());
+
+  for (int i=0; i<dfs.size()-1; i++){
+    Edge<Info> *e = g.findEdge(dfs[i]->getInfo(), dfs[i+1]->getInfo());
+    totalCost += e->getWeight();
+    path.push_back(dfs[i]->getInfo());
   }
+
+  // Deal with the last edge (returning to the beginning)
+  totalCost += finalEdge->getWeight();
+  path.push_back(dfs[0]->getInfo());
+
+  // Set graph back to original state
+  Utils::resetGraph(&g);
 
   return TSPResult{path, totalCost};
 }
@@ -115,5 +132,8 @@ TSPResult Data::heuristic() {
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
   // TODO
   error("Not yet implemented");
+
+  // verifica se o grafo é conexo
+  // nearest neighbor
   return {};
 }

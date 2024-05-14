@@ -3,6 +3,7 @@
 #include <ostream>
 #include <string>
 #include <fstream>
+#include <unordered_map>
 #include "Utils.h"
 
 // Colors class ================================================================
@@ -93,31 +94,33 @@ double Utils::haversineDistance(double lat1, double lon1, double lat2, double lo
 
 std::vector<Vertex<Info> *> Utils::prim(Graph<Info> * g) {
 
-    MutablePriorityQueue<Vertex<Info>> q;
+  MutablePriorityQueue<Vertex<Info>> q;
 
-    for (Vertex<Info>* v: g->getVertexSet()){
-        v->setVisited(false);
-        v->setDist(INF);
+  for (Vertex<Info>* v: g->getVertexSet()){
+    v->setVisited(false);
+    v->setDist(INF);
+  }
+
+  Info info(0);
+  Vertex<Info>* vertex= g->findVertex(info); //start with vertex 0
+  vertex->setDist(0);
+  q.insert(vertex);
+
+  while (!q.empty()){
+    Vertex<Info> * v = q.extractMin();
+    v->setVisited(true);
+    for (Edge<Info>* e: v->getAdj()){
+      Vertex<Info>* u = e->getDest();
+
+      if (!u->isVisited() && e->getWeight() < u->getDist()) {
+        u->setDist(e->getWeight());
+        q.insert(u);
+        u->setPath(e);
+      }
     }
+  }
 
-    Info info(0);
-    Vertex<Info>* vertex= g->findVertex(info); //start with vertex 0
-    vertex->setDist(0);
-    q.insert(vertex);
-
-    while (!q.empty()){
-        Vertex<Info> * v = q.extractMin();
-        v->setVisited(true);
-        for (Edge<Info>* e: v->getAdj()){
-            if (!e->getDest()->isVisited() && e->getWeight() < e->getDest()->getDist()){
-                e->getDest()->setDist(e->getWeight());
-                q.insert(e->getDest());
-                e->getDest()->setPath(e);
-            }
-        }
-    }
-
-    return g->getVertexSet();
+  return g->getVertexSet();
 }
 
 std::vector<Vertex<Info>*> Utils::MSTdfs(const std::vector<Vertex<Info> *>& vertexSet){
@@ -145,5 +148,50 @@ void Utils::dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
             }
         }
     }
+}
+
+void Utils::makeFullyConnected(Graph<Info> *g) {
+
+  // Identify original edges
+  for (Vertex<Info>* v: g->getVertexSet()){
+    for (Edge<Info>* e: v->getAdj()){
+      e->setSelected(false);
+    }
+  }
+
+  for (Vertex<Info>* v: g->getVertexSet()){
+    for (Vertex<Info>* u: g->getVertexSet()){
+      if (v == u) continue;
+
+      // Check if edge exists
+      auto edge = g->findEdge(v->getInfo(), u->getInfo());
+
+      if (!edge) {
+        // Create edge
+        double dist = v->getInfo().distance(u->getInfo());
+        g->addBidirectionalEdge(v, u, dist);
+
+        // Identify created edges (both directions)
+        edge = g->findEdge(v->getInfo(), u->getInfo());
+        edge->setSelected(true);
+
+        edge = g->findEdge(u->getInfo(), v->getInfo());
+        edge->setSelected(true);
+      }
+    }
+  }
+
+}
+
+void Utils::resetGraph(Graph<Info> *g) {
+  // Remove edges that were created
+  for (Vertex<Info>* v: g->getVertexSet()){
+    for (Edge<Info>* e: v->getAdj()){
+      if (e->isSelected()) {
+        g->removeEdge(v->getInfo(), e->getDest()->getInfo());
+      }
+    }
+  }
+
 }
 

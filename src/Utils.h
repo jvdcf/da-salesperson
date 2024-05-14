@@ -28,6 +28,10 @@ public:
   static std::vector<Vertex<Info> *> MSTdfs(const std::vector<Vertex<Info> *>& vertexSet);
 
   static void dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> &res);
+
+  static void makeFullyConnected(Graph<Info> *pGraph);
+
+  static void resetGraph(Graph<Info> *pGraph);
 };
 
 
