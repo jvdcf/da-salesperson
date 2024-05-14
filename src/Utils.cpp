@@ -94,16 +94,17 @@ double Utils::haversineDistance(double lat1, double lon1, double lat2, double lo
 
 std::vector<Vertex<Info> *> Utils::prim(Graph<Info> * g) {
 
-  MutablePriorityQueue<Vertex<Info>> q;
-
   for (Vertex<Info>* v: g->getVertexSet()){
     v->setVisited(false);
     v->setDist(INF);
+    v->setPath(nullptr);
   }
 
   Info info(0);
   Vertex<Info>* vertex= g->findVertex(info); //start with vertex 0
   vertex->setDist(0);
+
+  MutablePriorityQueue<Vertex<Info>> q;
   q.insert(vertex);
 
   while (!q.empty()){
@@ -113,8 +114,10 @@ std::vector<Vertex<Info> *> Utils::prim(Graph<Info> * g) {
       Vertex<Info>* u = e->getDest();
 
       if (!u->isVisited() && e->getWeight() < u->getDist()) {
+        if (u->getDist() == INF) q.insert(u);
+        else q.decreaseKey(u);
+
         u->setDist(e->getWeight());
-        q.insert(u);
         u->setPath(e);
       }
     }
@@ -130,24 +133,25 @@ std::vector<Vertex<Info>*> Utils::MSTdfs(const std::vector<Vertex<Info> *>& vert
 
     for (auto v : vertexSet)
         if (!v->isVisited())
-            dfsVisit(v, res);
+          dfsVisit(v, res);
 
     return res;
 }
 
 void Utils::dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
-    v->setVisited(true);
-    res.push_back(v);
-    for (auto e : v->getAdj()) {
-        auto dest = e->getDest();
-        if (dest->getPath()!= nullptr){
-            if (dest->getPath()->getOrig() == v) {
-                if (!dest->isVisited()) {
-                    dfsVisit(dest, res);
-                }
-            }
+  v->setVisited(true);
+  res.push_back(v);
+
+  for (auto e : v->getAdj()) {
+    auto dest = e->getDest();
+    if (dest->getPath()!= nullptr){
+      if (dest->getPath()->getOrig() == v) {
+        if (!dest->isVisited()) {
+          dfsVisit(dest, res);
         }
+      }
     }
+  }
 }
 
 void Utils::makeFullyConnected(Graph<Info> *g) {

@@ -98,11 +98,6 @@ TSPResult Data::triangular() {
   auto finalEdge = g.findEdge(dfs[dfs.size() - 1]->getInfo(), dfs[0]->getInfo());
   dfs[0]->setPath(finalEdge);
 
-//380
-
-//  Cost: 269
-//  Path: 0 1 2 10 5 4 8 7 6 9 3
-
   // Calculate the cost and the path
   double totalCost = 0;
   std::vector<Info> path;
@@ -113,8 +108,13 @@ TSPResult Data::triangular() {
     path.push_back(dfs[i]->getInfo());
   }
 
+  // Add last vertex to path
+  path.push_back(dfs[dfs.size()-1]->getInfo());
+
   // Deal with the last edge (returning to the beginning)
   totalCost += finalEdge->getWeight();
+
+  // Add the first vertex to the end of the path
   path.push_back(dfs[0]->getInfo());
 
   // Set graph back to original state
