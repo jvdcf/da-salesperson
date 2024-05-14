@@ -18,7 +18,7 @@ struct TSPResult {
   std::vector<Info> path;
 
   friend std::ostream &operator<<(std::ostream &os, const TSPResult &res) {
-    os << "Cost: " << res.cost << std::endl;
+    os << "Cost: " << res.cost << " | ";
     os << "Path: ";
     for (const auto &i : res.path) {
       os << i.getId() << " ";
