@@ -86,39 +86,32 @@ TSPResult Data::backtracking() {
 }
 
 TSPResult Data::triangular() {
-  Utils::makeFullyConnected(&g);
-
   // Prim's algorithm - Minimum Spanning Tree
   Utils::prim(&g);
 
   // DFS - Depth First Search in the MST
   std::vector<Vertex<Info> *> dfs = Utils::MSTdfs(g.getVertexSet());
 
-  // Add the first vertex to the end of the path
-  auto finalEdge = g.findEdge(dfs[dfs.size() - 1]->getInfo(), dfs[0]->getInfo());
-  dfs[0]->setPath(finalEdge);
-
   // Calculate the cost and the path
   double totalCost = 0;
   std::vector<Info> path;
 
   for (int i=0; i<dfs.size()-1; i++){
-    Edge<Info> *e = g.findEdge(dfs[i]->getInfo(), dfs[i+1]->getInfo());
-    totalCost += e->getWeight();
+    double cost = Utils::weight(dfs[i], dfs[i+1], &g);
+    totalCost += cost;
+    std::cout << cost << std::endl;
     path.push_back(dfs[i]->getInfo());
   }
 
   // Add last vertex to path
   path.push_back(dfs[dfs.size()-1]->getInfo());
 
+  std::cout <<Utils::weight(dfs[dfs.size()-1], dfs[0], &g) << std::endl;
   // Deal with the last edge (returning to the beginning)
-  totalCost += finalEdge->getWeight();
+  totalCost +=  Utils::weight(dfs[dfs.size()-1], dfs[0], &g);
 
   // Add the first vertex to the end of the path
   path.push_back(dfs[0]->getInfo());
-
-  // Set graph back to original state
-  Utils::resetGraph(&g);
 
   return TSPResult{path, totalCost};
 }

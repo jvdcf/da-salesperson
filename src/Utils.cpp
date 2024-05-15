@@ -154,46 +154,14 @@ void Utils::MSTdfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
   }
 }
 
-void Utils::makeFullyConnected(Graph<Info> *g) {
+double Utils::weight(Vertex<Info> * v, Vertex<Info> * u, Graph<Info> * g) {
+  Edge<Info> *e =g->findEdge(u->getInfo(), v->getInfo());
 
-  // Identify original edges
-  for (Vertex<Info>* v: g->getVertexSet()){
-    for (Edge<Info>* e: v->getAdj()){
-      e->setSelected(false);
-    }
-  }
-
-  for (Vertex<Info>* v: g->getVertexSet()){
-    for (Vertex<Info>* u: g->getVertexSet()){
-      if (v == u) continue;
-
-      // Check if edge exists
-      auto edge = g->findEdge(v->getInfo(), u->getInfo());
-
-      if (!edge) {
-        // Create edge
-        double dist = v->getInfo().distance(u->getInfo());
-        g->addBidirectionalEdge(v, u, dist);
-
-        // Identify created edges (both directions)
-        edge = g->findEdge(v->getInfo(), u->getInfo());
-        edge->setSelected(true);
-
-        edge = g->findEdge(u->getInfo(), v->getInfo());
-        edge->setSelected(true);
-      }
-    }
-  }
+  if (e) return e->getWeight();
+  std::cout << "Edge not found" << std::endl;
+  return v->getInfo().distance(u->getInfo());
 }
 
-void Utils::resetGraph(Graph<Info> *g) {
-  // Remove edges that were created
-  for (Vertex<Info>* v: g->getVertexSet())
-    for (Edge<Info>* e: v->getAdj())
-      if (e->isSelected())
-        g->removeEdge(v->getInfo(), e->getDest()->getInfo());
-
-}
 
 bool Utils::isConnected(Graph<Info> *g) {
 
@@ -218,4 +186,5 @@ void Utils::dfs(Vertex<Info> *v) {
           dfs(e->getDest());
 
 }
+
 

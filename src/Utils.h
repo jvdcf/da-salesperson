@@ -29,13 +29,11 @@ public:
 
   static void MSTdfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> &res);
 
-  static void makeFullyConnected(Graph<Info> *pGraph);
-
-  static void resetGraph(Graph<Info> *pGraph);
-
   static bool isConnected(Graph<Info> *g);
 
   static void dfs(Vertex<Info> *v);
+
+  static double weight(Vertex<Info> *v, Vertex<Info> *u, Graph<Info> *g);
 };
 
 
