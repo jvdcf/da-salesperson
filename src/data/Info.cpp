@@ -30,7 +30,7 @@ double Info::distance(const Info &other) const {
   return Utils::haversineDistance(
           this->lat.value(), this->lon.value(),
           other.getLat().value(), other.getLon().value()
-          )/1000.0; // So distance is in km
+          );
 }
 
 bool Info::operator==(const Info &rhs) const {
