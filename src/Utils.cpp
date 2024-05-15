@@ -3,6 +3,7 @@
 #include <ostream>
 #include <string>
 #include <fstream>
+#include <algorithm>
 #include "Utils.h"
 
 // Colors class ================================================================
