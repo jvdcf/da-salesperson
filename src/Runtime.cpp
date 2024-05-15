@@ -59,8 +59,8 @@ void Runtime::handleQuit() {
 void Runtime::handleCount() {
   auto &g = data->getGraph();
   unsigned int edgeCount = 0;
-  for (Vertex<Info>* v : g.getVertexSet()) {
-    edgeCount += v->getAdj().size();
+  for (auto v : g.getVertexSet()) {
+    edgeCount += v.second.getAdj().size();
   }
   std::cout << "Number of vertices: " << g.getVertexSet().size() << std::endl;
   std::cout << "Number of edges: " << edgeCount << std::endl;
@@ -81,7 +81,7 @@ void Runtime::handleHeuristic() {
 void Runtime::handleDisconnected(Command &cmd) {
   unsigned vertexId = cmd.args.at(0).getInt().value();
   Graph<Info> &g = data->getGraph();
-  if (g.findVertex(Info(vertexId)) == nullptr) {
+  if (!g.hasVertex(vertexId)) {
     error("Vertex " + std::to_string(vertexId) + " does not exist.");
     return;
   }
