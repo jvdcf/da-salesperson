@@ -26,10 +26,9 @@ bool Data::saveEdge(std::vector<CsvValues> const &line, Graph<Info> &g) {
     uint64_t orig_id = orig.value();
     uint64_t dest_id = dest.value();
     double distance = dist.value();
-    Vertex<Info> &o = g.addVertex(Info(orig_id), orig_id); // addVertex() returns an existing
-                                         // vertex if it already exists
-    Vertex<Info> &d = g.addVertex(Info(dest_id), dest_id);
-    g.addBidirectionalEdge(o, d, dist.value());
+    Vertex<Info> &o = g.findOrAddVertex(orig_id, Info(orig_id));
+    Vertex<Info> &d = g.findOrAddVertex(dest_id, Info(dest_id));
+    g.addBidirectionalEdge(o, d, distance);
     return true;
   } else {
     return false;

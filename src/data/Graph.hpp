@@ -155,13 +155,17 @@ public:
   }
 
   Vertex<T> &findVertex(uint64_t id) {
-    try { return vertexSet.at(id); }
-    catch (std::out_of_range &e) { return nullptr; }
+    return vertexSet.at(id);
   }
 
   bool hasVertex(uint64_t id) {
     try { vertexSet.at(id); return true; }
     catch (std::out_of_range &e) { return false; }
+  }
+
+  Vertex<T> &findOrAddVertex(uint64_t id, T info) {
+    if (!hasVertex(id)) return addVertex(info, id);
+    else return findVertex(id);
   }
 
   [[nodiscard]] Edge<T> &findEdge(uint64_t orig, uint64_t dest) {
