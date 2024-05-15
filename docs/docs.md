@@ -1,4 +1,5 @@
-As part of the second project of Algorithm Design, // TODO  
+As part of the second project of Algorithm Design, the goal was to implement various algorithms to solve the 
+Travelling Salesman Problem (TSP), using backtracking and various heuristics and approximations.
 
 This project was carried out by students from group 163: 
  - Maria Rabelo (up202000130@up.pt)
@@ -11,23 +12,26 @@ This project was carried out by students from group 163:
 
 The project was developed in C++ and uses the CMake tool to compile the source code and this documentation.  
 
-This program takes as input a path to a directory containing csv files with the following names:
-- // TODO  
+This program takes as input:
+- `edges.csv`: A path to a csv file containing the edges of the graph.
+- `[nodes.csv]`: An optional path to a csv file containing the nodes of the graph, and their respective coordinates.
 
-Make sure that the csv files are in the correct format and that the directory path is correct before executing.
+> **Warning:** If a `nodes.csv` file is not provided, the algorithms that generate new edges using the nodes' coordinates 
+> will not be available.
 
-> **Note:** The csv files can have different names, for example: `TODO.csv` can be named `TODO_ing.csv`.
-> Despite this, it is recommended to keep the original names.
+Make sure that the csv files are in the correct format and that the paths are correct.
 
 ### Using the shell script (Linux only)
 1. Make sure that the C / C++ dependencies are installed on your system.
-2. Execute the script `run.sh` (located in the directory of the project) in the terminal, giving the path to the directory containing the csv files as an argument.  
+2. Execute the script `run.sh` (located in the directory of the project) in the terminal, giving the correct paths as 
+   arguments.
    For example:
    ```bash
-   ./run.sh dataset/TODO
+   ./run.sh dataset/Real-world\ Graphs/graph1/edges.csv dataset/Real-world\ Graphs/graph1/nodes.csv
    ```
 
-> **Warning:** Make sure the script has the correct permissions to be executed and the package `rlwrap` is installed.
+> **Warning:** Make sure the script has the correct permissions to be executed.  
+
 > **Note:** Feel free to change the script to suit your needs.
 
 ### Using the terminal
@@ -35,21 +39,20 @@ Make sure that the csv files are in the correct format and that the directory pa
 ```
 cmake -DCMAKE_BUILD_TYPE=Release CMakeLists.txt
 make -j$(nproc)
-./DA2324_PRJ2_G163 dataset/TODO
+./DA2324_PRJ2_G163 <edges.csv> [<nodes.csv>]
 ```
 
-> **Warning:** Don't forget to **check the location and name of the csv files**.  
-> The commands above assume that the csv files are inside the `dataset/TODO` folder.
+> **Warning:** Don't forget to **change the arguments to the correct paths**.
 
 ### Using CLion
 
 1. Open the project folder in CLion.
 2. Create a CMake profile with the build type set to `Release`.
-3. Select the configuration `TODO` already created.  
+3. Select one of the configurations already created.  
    _or_  
    Create a new configuration with the correct program arguments and working directory.  
    For example:
-    - Program arguments: `dataset/TODO`
+    - Program arguments: `dataset/Toy-Graphs/tourism.csv`
     - Working directory: `$ProjectFileDir$`
 4. Run the configuration.
 
