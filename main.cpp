@@ -33,6 +33,15 @@ bool isFile(const std::string &path) {
   return true;
 }
 
+void startProgram(Data &d, Clock &c) {
+  Runtime rt(&d);
+  c.stop();
+  std::ostringstream oss;
+  oss << "Parsing took " << c;
+  info(oss.str());
+  rt.run();
+}
+
 int main(int argc, char **argv) {
   if (argc < 2 || argc > 3) {
     for (int i = 0; i < argc; i++) {
@@ -42,14 +51,13 @@ int main(int argc, char **argv) {
   }
   if (!isFile(argv[1])) printError();
 
+  Clock c; c.start();
   if (argc == 2 || std::string(argv[2]).empty()) {
     Data d(argv[1]);
-    Runtime rt(&d);
-    rt.run();
+    startProgram(d, c);
   } else {
     if (!isFile(argv[2])) printError();
     Data d(argv[1], argv[2]);
-    Runtime rt(&d);
-    rt.run();
+    startProgram(d, c);
   }
 }
