@@ -133,7 +133,15 @@ std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
   // TODO
   error("Not yet implemented");
 
-  // verifica se o grafo é conexo
+  // Check if the graph is connected
+  if (!Utils::isConnected(&g)) {
+    std::cout << "Graph is not connected" << std::endl;
+    return {};
+  }
+
+  // Find a hamiltonian path
+
+
   // nearest neighbor
   return {};
 }
