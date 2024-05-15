@@ -27,7 +27,6 @@ endif (DOXYGEN_FOUND)
 
 # Project build
 add_executable(DA2324_PRJ2_G163 main.cpp
-        # lib/Graph.h
         src/data/Graph.hpp
         lib/MutablePriorityQueue.h
         src/Utils.h src/Utils.cpp
