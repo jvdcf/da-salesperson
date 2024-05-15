@@ -82,27 +82,28 @@ Graph<Info> &Data::getGraph() { return g; }
 // Functions
 // ====================================================================================================
 
-std::vector<Edge<Info>*> generatePossibleEdges(Graph<Info>& g, Vertex<Info>* v, const std::vector<Info>& path) {
-  std::vector<Edge<Info> *> possibleEdges;
+std::vector<std::reference_wrapper<const Edge<Info>>>
+generatePossibleEdges(Graph<Info> &g, Vertex<Info> &v, const std::vector<Info> &path) {
+  std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges;
   if (path.size() == g.getNumVertex() - 1) {  // If all vertices have been visited, add edge to start
-    for (Edge<Info> *e: v->getAdj()) {
-      if (e->getDest()->getInfo().getId() == START_VERTEX) {
-        possibleEdges.push_back(e);
+    for (const auto &e: v.getAdj()) {
+      if (e.first == START_VERTEX) {
+        possibleEdges.push_back(std::ref(e.second));
         break;
       }
     }
   } else {
-    for (Edge<Info> *e: v->getAdj()) { // Add all edges that their destination vertex hasn't been visited yet
-      if (e->getDest()->getInfo().getId() == START_VERTEX) continue;
-      if (std::find(path.begin(), path.end(), e->getDest()->getInfo()) != path.end()) continue;
-      possibleEdges.push_back(e);
+    for (const auto &e: v.getAdj()) { // Add all edges that their destination vertex hasn't been visited yet
+      if (e.first == START_VERTEX) continue;
+      if (std::find(path.begin(), path.end(), g.findVertex(e.first).getInfo()) != path.end()) continue;
+      possibleEdges.push_back(std::ref(e.second));
     }
   }
   return possibleEdges;
 }
 
-TSPResult btDFS(Graph<Info>& g, const TSPResult& p, Vertex<Info>* v, double& bestCost) {
-  std::vector<Edge<Info>*> possibleEdges = generatePossibleEdges(g, v, p.path);
+TSPResult btDFS(Graph<Info> &g, const TSPResult &p, Vertex<Info> &v, double &bestCost) {
+  auto possibleEdges = generatePossibleEdges(g, v, p.path);
   TSPResult bestResult = {DBL_MAX, {}};
 
   // Base cases
@@ -115,11 +116,11 @@ TSPResult btDFS(Graph<Info>& g, const TSPResult& p, Vertex<Info>* v, double& bes
   if (p.cost >= bestCost) return bestResult;
 
   // Generate results and pick the best one
-  for (Edge<Info>* e: possibleEdges) {
-    double nextCost = p.cost + e->getWeight();
+  for (std::reference_wrapper<const Edge<Info>> e: possibleEdges) {
+    double nextCost = p.cost + e.get().getWeight();
     auto nextPath = p.path;
-    Vertex<Info>* nextVertex = e->getDest();
-    nextPath.push_back(nextVertex->getInfo());
+    Vertex<Info> &nextVertex = g.findVertex(e.get().getDest());
+    nextPath.push_back(nextVertex.getInfo());
     TSPResult next = {nextCost, nextPath};
     auto result = btDFS(g, next, nextVertex, bestCost);
     if (result < bestResult) bestResult = result;
@@ -129,7 +130,7 @@ TSPResult btDFS(Graph<Info>& g, const TSPResult& p, Vertex<Info>* v, double& bes
 }
 
 TSPResult Data::backtracking() {
-  Vertex<Info>* start = g.findVertex(Info(START_VERTEX));
+  Vertex<Info> &start = g.findVertex(START_VERTEX);
   TSPResult p = {0, {}};
   auto bestCost = DBL_MAX;
 
