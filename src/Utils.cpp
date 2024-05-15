@@ -133,12 +133,12 @@ std::vector<Vertex<Info>*> Utils::MSTdfs(const std::vector<Vertex<Info> *>& vert
 
     for (auto v : vertexSet)
         if (!v->isVisited())
-          dfsVisit(v, res);
+          MSTdfsVisit(v, res);
 
     return res;
 }
 
-void Utils::dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
+void Utils::MSTdfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
   v->setVisited(true);
   res.push_back(v);
 
@@ -147,7 +147,7 @@ void Utils::dfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
     if (dest->getPath()!= nullptr){
       if (dest->getPath()->getOrig() == v) {
         if (!dest->isVisited()) {
-          dfsVisit(dest, res);
+          MSTdfsVisit(dest, res);
         }
       }
     }
@@ -184,18 +184,38 @@ void Utils::makeFullyConnected(Graph<Info> *g) {
       }
     }
   }
-
 }
 
 void Utils::resetGraph(Graph<Info> *g) {
   // Remove edges that were created
-  for (Vertex<Info>* v: g->getVertexSet()){
-    for (Edge<Info>* e: v->getAdj()){
-      if (e->isSelected()) {
+  for (Vertex<Info>* v: g->getVertexSet())
+    for (Edge<Info>* e: v->getAdj())
+      if (e->isSelected())
         g->removeEdge(v->getInfo(), e->getDest()->getInfo());
-      }
-    }
-  }
+
+}
+
+bool Utils::isConnected(Graph<Info> *g) {
+
+  for (Vertex<Info>* v: g->getVertexSet())
+    v->setVisited(false);
+
+
+  dfs(g->getVertexSet()[0]);
+
+  for (Vertex<Info>* v: g->getVertexSet())
+    if (!v->isVisited())
+      return false;
+
+  return true;
+}
+
+void Utils::dfs(Vertex<Info> *v) {
+  v->setVisited(true);
+
+  for (auto e : v->getAdj())
+    if (!e->getDest()->isVisited())
+          dfs(e->getDest());
 
 }
 
