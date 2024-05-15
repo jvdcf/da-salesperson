@@ -12,6 +12,9 @@
 #include <unordered_map>
 #include <stdexcept>
 #include <optional>
+#include "../../lib/MutablePriorityQueue.h"
+
+#define INF std::numeric_limits<double>::max()
 
 template<typename T> class Graph;
 template<typename T> class Vertex;
@@ -28,7 +31,6 @@ private:
 
 protected:
   double flow = 0.0;      /// Used for flow-related algorithms
-  bool selected = false;  /// Used to mark the edge as artificially generated
 
 public:
   Edge() = default;
@@ -43,13 +45,10 @@ public:
 
   [[nodiscard]] double getFlow() const { return flow; }
 
-  [[nodiscard]] bool isSelected() const { return selected; }
-
   void setWeight(double w) { this->weight = w; }
 
   void setFlow(double f) { this->flow = f; }
 
-  void setSelected(bool s) { this->selected = s; }
 };
 
 // =================================================================================================
@@ -66,8 +65,9 @@ protected:
   bool visited = false;       // Used by traversal algorithms
   bool processing = false;    // Used by DAG algorithms
   double dist = 0.0;          // Used by shortest path algorithms
-  uint64_t path = UINT64_MAX; // Used by shortest path algorithms
-  int queueIndex = 0;         // Used by MutablePriorityQueue
+//  uint64_t path = UINT64_MAX;
+  Edge<T>* path = nullptr;    // Used by shortest path algorithms
+  int queueIndex = 0; // Used by MutablePriorityQueue
 
   Edge<T> &addEdge(Vertex<T> &dest, double weight) {
     edges[dest.getId()] = Edge<T>(this->getId(), dest.getId(), weight);
@@ -94,6 +94,11 @@ public:
     return *this;
   }
 
+  // Required by MutablePriorityQueue
+  bool operator<(Vertex<T> & vertex) const {
+    return this->dist < vertex.dist;
+  }
+
   [[nodiscard]] T getInfo() const { return info; }
 
   [[nodiscard]] uint64_t getId() const { return id; }
@@ -106,7 +111,7 @@ public:
 
   [[nodiscard]] double getDist() const { return dist; }
 
-  [[nodiscard]] Edge<T> &getPath() const { return path; }
+  [[nodiscard]] Edge<T>* &getPath() { return path; }
 
   void setVisited(bool v) { this->visited = v; }
 
@@ -114,7 +119,9 @@ public:
 
   void setDist(double d) { this->dist = d; }
 
-  void setPath(Edge<T> &p) { this->path = p; }
+  void setPath(Edge<T> *p) { this->path = p; }
+
+  friend class MutablePriorityQueue<Vertex>;
 };
 
 // =================================================================================================
@@ -168,8 +175,8 @@ public:
     else return findVertex(id);
   }
 
-  [[nodiscard]] Edge<T> &findEdge(uint64_t orig, uint64_t dest) {
-    try { return vertexSet.at(orig).getAdj().at(dest); }
+  [[nodiscard]] Edge<T>* findEdge(uint64_t orig, uint64_t dest) {
+    try { return &vertexSet.at(orig).getAdj().at(dest); }
     catch (std::out_of_range &e) { return nullptr; }
   }
 

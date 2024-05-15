@@ -5,6 +5,7 @@
 #include <fstream>
 #include <unordered_map>
 #include "Utils.h"
+#include "../lib/MutablePriorityQueue.h"
 
 // Colors class ================================================================
 
@@ -94,99 +95,102 @@ double Utils::haversineDistance(double lat1, double lon1, double lat2, double lo
   return R * c;
 }
 
-std::vector<Vertex<Info> *> Utils::prim(Graph<Info> * g) {
+void Utils::prim(Graph<Info> * g) {
 
-  for (Vertex<Info>* v: g->getVertexSet()){
-    v->setVisited(false);
-    v->setDist(INF);
-    v->setPath(nullptr);
+  for (auto& [id, v] : g->getVertexSet()){
+    v.setVisited(false);
+    v.setDist(INF);
+    v.setPath(nullptr);
   }
 
-  Info info(0);
-  Vertex<Info>* vertex= g->findVertex(info); //start with vertex 0
-  vertex->setDist(0);
+  Vertex<Info> vertex= g->findVertex(0); //start with vertex 0
+  vertex.setDist(0);
 
   MutablePriorityQueue<Vertex<Info>> q;
-  q.insert(vertex);
+  q.insert(&vertex);
 
   while (!q.empty()){
     Vertex<Info> * v = q.extractMin();
     v->setVisited(true);
-    for (Edge<Info>* e: v->getAdj()){
-      Vertex<Info>* u = e->getDest();
+    for (auto& [destId, e] : v->getAdj()){
+      Vertex<Info> u = g->findVertex(destId);
 
-      if (!u->isVisited() && e->getWeight() < u->getDist()) {
-        if (u->getDist() == INF) q.insert(u);
-        else q.decreaseKey(u);
+      if (!u.isVisited() && e.getWeight() < u.getDist()) {
+        if (u.getDist() == INF) q.insert(&u);
+        else q.decreaseKey(&u);
 
-        u->setDist(e->getWeight());
-        u->setPath(e);
+        u.setDist(e.getWeight());
+        u.setPath(&e);
       }
+
     }
+
   }
 
-  return g->getVertexSet();
 }
 
-std::vector<Vertex<Info>*> Utils::MSTdfs(const std::vector<Vertex<Info> *>& vertexSet){
-    std::vector<Vertex<Info>*> res;
-    for (auto v : vertexSet)
-        v->setVisited(false);
+std::vector<uint64_t> Utils::MSTdfs(Graph<Info> * g){
+  std::vector<uint64_t> res;
+  for (auto& [id, v]  : g->getVertexSet())
+    v.setVisited(false);
 
-    for (auto v : vertexSet)
-        if (!v->isVisited())
-          MSTdfsVisit(v, res);
+  for (auto& [id, v]  : g->getVertexSet())
+    if (!v.isVisited())
+      MSTdfsVisit(v, res, g);
 
-    return res;
+  return res;
 }
 
-void Utils::MSTdfsVisit(Vertex<Info> *v, std::vector<Vertex<Info> *> & res) {
-  v->setVisited(true);
-  res.push_back(v);
+void Utils::MSTdfsVisit(Vertex<Info>& v, std::vector<uint64_t> & res, Graph<Info> * g) {
+  v.setVisited(true);
+  res.push_back(v.getId());
 
-  for (auto e : v->getAdj()) {
-    auto dest = e->getDest();
-    if (dest->getPath()!= nullptr){
-      if (dest->getPath()->getOrig() == v) {
-        if (!dest->isVisited()) {
-          MSTdfsVisit(dest, res);
+  for (auto& [destId, e] : v.getAdj()) {
+    Vertex<Info>& u = g->findVertex(destId);
+
+    if (u.getPath()){
+      if (u.getPath()->getOrig() == v.getId()) {
+        if (!u.isVisited()) {
+          MSTdfsVisit(u, res, g);
         }
       }
     }
   }
 }
 
-double Utils::weight(Vertex<Info> * v, Vertex<Info> * u, Graph<Info> * g) {
-  Edge<Info> *e =g->findEdge(u->getInfo(), v->getInfo());
+double Utils::weight(uint64_t v, uint64_t u, Graph<Info> * g) {
+  Edge<Info>* e =g->findEdge(v, u);
 
   if (e) return e->getWeight();
-  std::cout << "Edge not found" << std::endl;
-  return v->getInfo().distance(u->getInfo());
+  return g->findVertex(v).getInfo().distance(g->findVertex(u).getInfo());
 }
 
 
 bool Utils::isConnected(Graph<Info> *g) {
 
-  for (Vertex<Info>* v: g->getVertexSet())
-    v->setVisited(false);
+  for (auto& [id, v] : g->getVertexSet())
+    v.setVisited(false);
+
+  Vertex<Info> first = g->getVertexSet().at(0);
+
+  dfs(&first, g);
 
 
-  dfs(g->getVertexSet()[0]);
-
-  for (Vertex<Info>* v: g->getVertexSet())
-    if (!v->isVisited())
+  for (auto& [id, v] : g->getVertexSet())
+    if (!v.isVisited())
       return false;
 
   return true;
 }
 
-void Utils::dfs(Vertex<Info> *v) {
+void Utils::dfs(Vertex<Info> *v, Graph<Info> * g) {
   v->setVisited(true);
 
-  for (auto e : v->getAdj())
-    if (!e->getDest()->isVisited())
-          dfs(e->getDest());
-
+  for (auto& [destId, e] : v->getAdj()) {
+    Vertex<Info>& u = g->findVertex(destId);
+    if (!u.isVisited())
+      dfs(&u, g);
+  }
 }
 
 
