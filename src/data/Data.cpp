@@ -23,10 +23,12 @@ bool Data::saveEdge(std::vector<CsvValues> const &line, Graph<Info> &g) {
   auto dest = line[1].get_int();
   auto dist = line[2].get_flt();
   if (orig.has_value() && dest.has_value() && dist.has_value()) {
-    Vertex<Info> *o =
-        g.addVertex(Info(orig.value())); // addVertex() returns an existing
+    uint64_t orig_id = orig.value();
+    uint64_t dest_id = dest.value();
+    double distance = dist.value();
+    Vertex<Info> &o = g.addVertex(Info(orig_id), orig_id); // addVertex() returns an existing
                                          // vertex if it already exists
-    Vertex<Info> *d = g.addVertex(Info(dest.value()));
+    Vertex<Info> &d = g.addVertex(Info(dest_id), dest_id);
     g.addBidirectionalEdge(o, d, dist.value());
     return true;
   } else {
@@ -39,7 +41,7 @@ bool Data::saveNode(std::vector<CsvValues> const &line, Graph<Info> &g) {
   auto longitude = line[1].get_flt();
   auto latitude = line[2].get_flt();
   if (id.has_value() && longitude.has_value() && latitude.has_value()) {
-    g.addVertex(Info(id.value(), longitude.value(), latitude.value()));
+    g.addVertex(Info(id.value(), longitude.value(), latitude.value()), id.value());
     return true;
   } else {
     return false;

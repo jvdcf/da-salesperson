@@ -11,6 +11,11 @@
 #include <cstdint>
 #include <unordered_map>
 #include <stdexcept>
+#include <optional>
+
+template<typename T> class Graph;
+template<typename T> class Vertex;
+template<typename T> class Edge;
 
 // =================================================================================================
 
@@ -26,6 +31,8 @@ protected:
   bool selected = false;  /// Used to mark the edge as artificially generated
 
 public:
+  Edge() = default;
+
   Edge(uint64_t orig, uint64_t dest, double weight) : orig(orig), dest(dest), weight(weight) {}
 
   [[nodiscard]] uint64_t getOrig() const { return orig; }
@@ -49,30 +56,43 @@ public:
 
 template<typename T>
 class Vertex {
+  friend class Graph<T>;
 private:
   uint64_t id;  /// Vertex id
   T info;       /// Information stored in the vertex
   std::unordered_map<uint64_t, Edge<T>> edges;  /// Adjacency list
 
 protected:
-  bool visited = false;     // Used by traversal algorithms
-  bool processing = false;  // Used by DAG algorithms
-  double dist = 0.0;        // Used by shortest path algorithms
-  Edge<T> &path = nullptr;  // Used by shortest path algorithms
-  int queueIndex = 0;       // Used by MutablePriorityQueue
+  bool visited = false;       // Used by traversal algorithms
+  bool processing = false;    // Used by DAG algorithms
+  double dist = 0.0;          // Used by shortest path algorithms
+  uint64_t path = UINT64_MAX; // Used by shortest path algorithms
+  int queueIndex = 0;         // Used by MutablePriorityQueue
 
   Edge<T> &addEdge(Vertex<T> &dest, double weight) {
-    Edge<T> e = Edge<T>(this->info, dest.getInfo(), weight);
-    edges[dest.getInfo()] = e;
-    return edges[dest.getInfo()];
+    edges[dest.getId()] = Edge<T>(this->getId(), dest.getId(), weight);
+    return edges[dest.getId()];
   }
 
   void removeEdge(Vertex<T> &dest) {
-    edges.erase(dest.getInfo());
+    edges.erase(dest.getId());
   }
 
 public:
+  Vertex() = default;
+
   explicit Vertex(T info, uint64_t id) : info(info), id(id) {}
+
+  Vertex(const Vertex<T> &v) : info(v.info), id(v.id), edges(v.edges) {}
+
+  Vertex<T> &operator=(const Vertex<T> &v) {
+    if (this != &v) {
+      this->info = v.info;
+      this->id = v.id;
+      this->edges = v.edges;
+    }
+    return *this;
+  }
 
   [[nodiscard]] T getInfo() const { return info; }
 
@@ -134,9 +154,14 @@ public:
     addEdge(dest, orig, weight);
   }
 
-  [[nodiscard]] Vertex<T> &findVertex(uint64_t id) {
+  Vertex<T> &findVertex(uint64_t id) {
     try { return vertexSet.at(id); }
     catch (std::out_of_range &e) { return nullptr; }
+  }
+
+  bool hasVertex(uint64_t id) {
+    try { vertexSet.at(id); return true; }
+    catch (std::out_of_range &e) { return false; }
   }
 
   [[nodiscard]] Edge<T> &findEdge(uint64_t orig, uint64_t dest) {
