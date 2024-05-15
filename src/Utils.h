@@ -6,7 +6,7 @@
 #include <utility>
 #include <chrono>
 #include "data/Info.h"
-#include "../lib/Graph.h"
+#include "data/Graph.hpp"
 
 
 /**
