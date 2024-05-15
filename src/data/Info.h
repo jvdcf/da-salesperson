@@ -14,6 +14,8 @@
 
 class Info {
 public:
+  Info() = default;
+
   /**
    * @brief Constructor (using edges.csv)
    */

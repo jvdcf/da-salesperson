@@ -58,10 +58,12 @@ unsigned Utils::countLines(const std::string& path) {
 
 void Utils::printLoading(unsigned current, unsigned total, const std::string& message) {
   float percentage = std::round((float)current / total * 100);
-  std::cout << message << ": "
-            << current/1000 << "K / " << total/1000
-            << "K (" << percentage << "%)     \r";
-  std::cout.flush();
+  if (current * 10000 / total != (current - 1) * 10000 / total) {
+    std::cout << message << ": "
+              << current / 1000 << "K / " << total / 1000
+              << "K (" << percentage << "%)     \r";
+    std::cout.flush();
+  }
 }
 
 void Utils::clearLine() {
