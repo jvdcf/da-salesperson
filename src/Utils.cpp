@@ -142,6 +142,10 @@ std::vector<uint64_t> Utils::MSTdfs(Graph<Info> * g){
 
   MSTdfsVisit(first, res, g);
 
+  for (auto& [id, v]  : g->getVertexSet())
+    if (!v.isVisited())
+      MSTdfsVisit(v, res, g);
+
   return res;
 }
 
