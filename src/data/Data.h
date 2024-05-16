@@ -14,8 +14,8 @@ typedef bool (*savefn_t)(std::vector<CsvValues> const &, Graph<Info> &);
 #define START_VERTEX 0
 
 struct TSPResult {
-  std::vector<uint64_t> path;
   double cost;
+  std::vector<uint64_t> path;
 
   friend std::ostream &operator<<(std::ostream &os, const TSPResult &res) {
     os << "Cost: " << res.cost << " | ";
