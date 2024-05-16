@@ -14,14 +14,14 @@ typedef bool (*savefn_t)(std::vector<CsvValues> const &, Graph<Info> &);
 #define START_VERTEX 0
 
 struct TSPResult {
+  std::vector<uint64_t> path;
   double cost;
-  std::vector<Info> path;
 
   friend std::ostream &operator<<(std::ostream &os, const TSPResult &res) {
     os << "Cost: " << res.cost << " | ";
     os << "Path: ";
     for (const auto &i : res.path) {
-      os << i.getId() << " ";
+      os << i << " ";
     }
     return os;
   }
