@@ -147,10 +147,27 @@ TSPResult Data::triangular() {
   return {};
 }
 
+// ====================================================================================================
+
 TSPResult Data::heuristic() {
-  // TODO
-  error("Not yet implemented");
-  return {};
+  TSPResult res = {0, {}};
+  Vertex<Info> &v = g.findVertex(START_VERTEX);
+
+  while (res.path.size() < g.getNumVertex()) {
+    auto possibleEdges = generatePossibleEdges(g, v, res.path);
+    auto edge = std::min_element(possibleEdges.begin(), possibleEdges.end(),
+                                 [](const Edge<Info> &a, const Edge<Info> &b) {
+                                   return a.getWeight() < b.getWeight();
+                                 });
+    if (edge == possibleEdges.end()) break;
+    res.cost += edge->get().getWeight();
+    res.path.push_back(edge->get().getDest());
+    v = g.findVertex(edge->get().getDest());
+  }
+
+  res.cost += g.findVertex(res.path.back()).getAdj().at(START_VERTEX).getWeight();
+  res.path.insert(res.path.begin(), START_VERTEX);
+  return res;
 }
 
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
