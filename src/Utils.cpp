@@ -100,10 +100,10 @@ void Utils::prim(Graph<Info> * g) {
   for (auto& [id, v] : g->getVertexSet()){
     v.setVisited(false);
     v.setDist(INF);
-    v.setPath(nullptr);
+    v.setPath(UINT64_MAX);
   }
 
-  Vertex<Info> vertex= g->findVertex(0); //start with vertex 0
+  Vertex<Info>& vertex= g->findVertex(0); //start with vertex 0
   vertex.setDist(0);
 
   MutablePriorityQueue<Vertex<Info>> q;
@@ -123,7 +123,7 @@ void Utils::prim(Graph<Info> * g) {
         else q.decreaseKey(&u);
 
         u.setDist(e.getWeight());
-        u.setPath(&e);
+        u.setPath(v->getId());
 
       }
 
@@ -154,7 +154,7 @@ void Utils::MSTdfsVisit(Vertex<Info>& v, std::vector<uint64_t> & res, Graph<Info
     Vertex<Info>& u = g->findVertex(destId);
 
     if (u.getPath()){
-      if (u.getPath()->getOrig() == v.getId()) {
+      if (u.getPath() == v.getId()) {
         if (!u.isVisited()) {
           MSTdfsVisit(u, res, g);
         }
@@ -179,7 +179,6 @@ bool Utils::isConnected(Graph<Info> *g) {
   Vertex<Info> first = g->getVertexSet().at(0);
 
   dfs(&first, g);
-
 
   for (auto& [id, v] : g->getVertexSet())
     if (!v.isVisited())

@@ -48,7 +48,6 @@ public:
   void setWeight(double w) { this->weight = w; }
 
   void setFlow(double f) { this->flow = f; }
-
 };
 
 // =================================================================================================
@@ -65,9 +64,8 @@ protected:
   bool visited = false;       // Used by traversal algorithms
   bool processing = false;    // Used by DAG algorithms
   double dist = 0.0;          // Used by shortest path algorithms
-//  uint64_t path = UINT64_MAX;
-  Edge<T>* path = nullptr;    // Used by shortest path algorithms
-  int queueIndex = 0; // Used by MutablePriorityQueue
+  uint64_t path = UINT64_MAX; // Used by shortest path algorithms
+  int queueIndex = 0;         // Used by MutablePriorityQueue
 
   Edge<T> &addEdge(Vertex<T> &dest, double weight) {
     edges[dest.getId()] = Edge<T>(this->getId(), dest.getId(), weight);
@@ -111,7 +109,7 @@ public:
 
   [[nodiscard]] double getDist() const { return dist; }
 
-  [[nodiscard]] Edge<T>* &getPath() { return path; }
+  [[nodiscard]] uint64_t getPath() const { return path; }
 
   void setVisited(bool v) { this->visited = v; }
 
@@ -119,7 +117,7 @@ public:
 
   void setDist(double d) { this->dist = d; }
 
-  void setPath(Edge<T> *p) { this->path = p; }
+  void setPath(uint64_t p) { this->path = p; }
 
   friend class MutablePriorityQueue<Vertex>;
 };
