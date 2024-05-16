@@ -110,17 +110,21 @@ void Utils::prim(Graph<Info> * g) {
   q.insert(&vertex);
 
   while (!q.empty()){
+
     Vertex<Info> * v = q.extractMin();
     v->setVisited(true);
+
     for (auto& [destId, e] : v->getAdj()){
-      Vertex<Info> u = g->findVertex(destId);
+      Vertex<Info>& u = g->findVertex(destId);
 
       if (!u.isVisited() && e.getWeight() < u.getDist()) {
+
         if (u.getDist() == INF) q.insert(&u);
         else q.decreaseKey(&u);
 
         u.setDist(e.getWeight());
         u.setPath(&e);
+
       }
 
     }
@@ -134,15 +138,16 @@ std::vector<uint64_t> Utils::MSTdfs(Graph<Info> * g){
   for (auto& [id, v]  : g->getVertexSet())
     v.setVisited(false);
 
-  for (auto& [id, v]  : g->getVertexSet())
-    if (!v.isVisited())
-      MSTdfsVisit(v, res, g);
+  Vertex<Info>& first = g->findVertex(0);
+
+  MSTdfsVisit(first, res, g);
 
   return res;
 }
 
 void Utils::MSTdfsVisit(Vertex<Info>& v, std::vector<uint64_t> & res, Graph<Info> * g) {
   v.setVisited(true);
+
   res.push_back(v.getId());
 
   for (auto& [destId, e] : v.getAdj()) {
