@@ -1,6 +1,7 @@
 #ifndef CSV_H
 #define CSV_H
 #define PARSUM_IMPL
+
 #include "Parsum.hpp"
 #include <cctype>
 #include <cstddef>
@@ -27,28 +28,33 @@ public:
     None,
     Separator,
   } variant;
+
   /// Constructor
   CsvValues() : value(nullptr), variant(None) {};
 
   std::optional<std::string> get_str() const;
+
   std::optional<int64_t> get_int() const;
+
   std::optional<double> get_flt() const;
+
   /// Helper function to display the contents of the CsvValue
   std::string display() {
     switch (variant) {
-    case String:
-      return "Str(" + std::get<std::string>(this->value) + ")";
-    case Integer:
-      return "Int(" + std::to_string(std::get<int64_t>(this->value)) + ")";
-    case Float:
-      return "Float(" + std::to_string(std::get<double>(this->value)) + ")";
-    case None:
-      return "Null";
-    case Separator:
-      return "Separator";
+      case String:
+        return "Str(" + std::get<std::string>(this->value) + ")";
+      case Integer:
+        return "Int(" + std::to_string(std::get<int64_t>(this->value)) + ")";
+      case Float:
+        return "Float(" + std::to_string(std::get<double>(this->value)) + ")";
+      case None:
+        return "Null";
+      case Separator:
+        return "Separator";
     }
     return "";
   }
+
   /// Static constructor for Int
   static CsvValues Int(int64_t i) {
     CsvValues r = CsvValues();
@@ -56,6 +62,7 @@ public:
     r.value = i;
     return r;
   }
+
   /// Static constructor for Str
   static CsvValues Str(std::string i) {
     CsvValues r = CsvValues();
@@ -63,6 +70,7 @@ public:
     r.value = i;
     return r;
   }
+
   /// Static constructor for Flt
   static CsvValues Flt(double i) {
     CsvValues r = CsvValues();
@@ -70,6 +78,7 @@ public:
     r.value = i;
     return r;
   }
+
   /// Static constructor for Nil
   static CsvValues Nil() {
     CsvValues r = CsvValues();
@@ -77,6 +86,7 @@ public:
     r.value = nullptr;
     return r;
   }
+
   /// Static constructor for Sep
   static CsvValues Sep() {
     CsvValues r = CsvValues();
@@ -96,14 +106,18 @@ private:
   /// Adds an item to the line
 public:
   constexpr CsvLine() : line({}) {};
+
   constexpr CsvLine(std::vector<CsvValues> line) : line(line) {};
+
   void add_val(CsvValues v) { line.push_back(v); }
+
   /// Exposes the underlying data in the line
   const std::vector<CsvValues> &get_data() { return line; }
+
   /// Displays the contents of the line
   std::string display() {
     std::string res;
-    for (auto v : line) {
+    for (auto v: line) {
       res += v.display() + ", ";
     }
     return res;
@@ -123,11 +137,14 @@ private:
 public:
   /// Default Constructor
   constexpr Csv() : header(CsvLine()), data(std::vector<CsvLine>()) {};
+
   /// Constructor
   constexpr Csv(CsvLine const &head, std::vector<CsvLine> const &dat)
-      : header(head), data(dat) {};
+          : header(head), data(dat) {};
+
   /// Returns the underlying data consuming the CSV.
   std::vector<CsvLine> to_data() { return std::move(data); }
+
   /// Displays the csv file
   std::string display() {
     std::string res;
@@ -138,6 +155,7 @@ public:
     return res;
   }
 };
+
 /*
  * @brief Parses a CsvLine.
  * @return Parser<CsvLine>
@@ -184,8 +202,8 @@ consteval auto parse_sep();
 
 consteval auto parse_int() {
   constexpr auto parser = parsum::map(
-      maybe(parsum::char_p<std::string>('-')) + parsum::digits1(),
-      [](auto inp) -> CsvValues { return CsvValues::Int(std::stoll(inp)); });
+          maybe(parsum::char_p<std::string>('-')) + parsum::digits1(),
+          [](auto inp) -> CsvValues { return CsvValues::Int(std::stoll(inp)); });
   return context(parser, [](auto err) {
     return parsum::ParseError("Failed to parse int: " + err.get_why(),
                               err.get_kind(), err.get_pos());
@@ -194,10 +212,11 @@ consteval auto parse_int() {
 
 consteval auto parse_flt() {
   constexpr auto parser =
-      parsum::maybe(parsum::char_p<std::string>('-')) >> parsum::digits1() >>
-      parsum::char_p<std::string>('.') >> parsum::digits1() >>
-      parsum::cut(
-          parsum::peek(parsum::verify([](char const &c) { return c != '.'; })));
+          parsum::maybe(parsum::char_p<std::string>('-')) >> parsum::digits1() >>
+                                                          parsum::char_p<std::string>('.') >> parsum::digits1() >>
+                                                          parsum::cut(
+                                                                  parsum::peek(parsum::verify(
+                                                                          [](char const &c) { return c != '.'; })));
   constexpr auto result = map(parser, [](auto inp) -> CsvValues {
     auto [sign, fst, sep, snd] = inp;
     return CsvValues::Flt(std::stod(sign + fst + sep + snd));
@@ -215,7 +234,7 @@ consteval auto parse_str() {
                                    [](auto c) { return std::string{c}; });
   constexpr auto parser = parsum::many1(fst);
   constexpr auto result =
-      parsum::map(parser, [](auto inp) { return CsvValues::Str(inp); });
+          parsum::map(parser, [](auto inp) { return CsvValues::Str(inp); });
   return parsum::context(result, [](auto err) {
     return parsum::ParseError("Failed to parse str: " + err.get_why(),
                               err.get_kind(), err.get_pos());
@@ -226,20 +245,21 @@ consteval auto parse_weird() {
   constexpr auto parse_quot = parsum::char_p('"');
   constexpr auto parse_comm = parsum::char_p(',');
   constexpr auto parser = parse_quot >> parsum::digits1() >> parse_comm >>
-                          parsum::digits1() >> parse_quot;
+                                     parsum::digits1() >> parse_quot;
   constexpr auto result = parsum::map(
-      parser, [](std::tuple<char, std::string, char, std::string, char> t) {
-        auto [_1, p1, _2, p2, _3] = t;
-        return CsvValues::Int(std::stoll(p1 + p2));
-      });
+          parser, [](std::tuple<char, std::string, char, std::string, char> t) {
+            auto [_1, p1, _2, p2, _3] = t;
+            return CsvValues::Int(std::stoll(p1 + p2));
+          });
   return parsum::context(result, [](auto err) {
     return parsum::ParseError("Failed to parse weird: " + err.get_why(),
                               err.get_kind(), err.get_pos());
   });
 }
+
 consteval auto parse_sep() {
   constexpr auto result =
-      parsum::map(parsum::char_p(','), [](auto c) { return std::tuple(); });
+          parsum::map(parsum::char_p(','), [](auto c) { return std::tuple(); });
   return parsum::context(result, [](auto err) {
     return parsum::ParseError("Failed to parse flt: " + err.get_why(),
                               err.get_kind(), err.get_pos());
@@ -249,29 +269,29 @@ consteval auto parse_sep() {
 consteval auto parse_line() {
   using parsum::char_p;
   constexpr auto parse_bom = parsum::context(
-      parsum::map(char_p('\xEF') >> char_p('\xBB') >> char_p('\xBF'),
-                  [](auto) { return std::tuple(); }),
-      [](auto err) {
-        return parsum::ParseError("BOM: " + err.get_why(), err.get_kind(),
-                                  err.get_pos());
-      });
+          parsum::map(char_p('\xEF') >> char_p('\xBB') >> char_p('\xBF'),
+                      [](auto) { return std::tuple(); }),
+          [](auto err) {
+            return parsum::ParseError("BOM: " + err.get_why(), err.get_kind(),
+                                      err.get_pos());
+          });
   constexpr auto parse_val = parsum::context(
-      parse_flt() | parse_int() | parse_weird() | parse_str(), [](auto err) {
-        return parsum::ParseError("No valid alternatives found!",
-                                  err.get_kind(), err.get_pos());
-      });
+          parse_flt() | parse_int() | parse_weird() | parse_str(), [](auto err) {
+            return parsum::ParseError("No valid alternatives found!",
+                                      err.get_kind(), err.get_pos());
+          });
   constexpr auto parse_endl = parsum::context(
-      parsum::map(many0(char_p<std::string>('\r') | char_p<std::string>('\n')),
-                  [](std::string const &) { return std::tuple(); }),
-      [](auto err) {
-        return parsum::ParseError("Newline: " + err.get_why(), err.get_kind(),
-                                  err.get_pos());
-      });
+          parsum::map(many0(char_p<std::string>('\r') | char_p<std::string>('\n')),
+                      [](std::string const &) { return std::tuple(); }),
+          [](auto err) {
+            return parsum::ParseError("Newline: " + err.get_why(), err.get_kind(),
+                                      err.get_pos());
+          });
   constexpr auto parser =
-      parsum::maybe(parse_bom) >>
-      many1(parsum::map(parse_val >> maybe(parse_sep()),
-                        [](auto c) { return std::vector{std::get<0>(c)}; })) >>
-      parse_endl;
+          parsum::maybe(parse_bom) >>
+                                   many1(parsum::map(parse_val >> maybe(parse_sep()),
+                                                     [](auto c) { return std::vector{std::get<0>(c)}; })) >>
+                                   parse_endl;
   constexpr auto result = parsum::map(parser, [](auto c) {
     auto [pp] = c;
     CsvLine res(pp);
@@ -285,9 +305,9 @@ consteval auto parse_line() {
 
 consteval auto parse_csv() {
   constexpr auto parser =
-      parse_line() >>
-      parsum::many0(parsum::map(
-          parse_line(), [](CsvLine const &c) { return std::vector{c}; }));
+          parse_line() >>
+                       parsum::many0(parsum::map(
+                               parse_line(), [](CsvLine const &c) { return std::vector{c}; }));
   constexpr auto result = parsum::map(parser, [](auto c) {
     auto [head, data] = c;
     return Csv(head, data);
@@ -311,7 +331,7 @@ inline std::optional<int64_t> CsvValues::get_int() const {
     return {};
   } else {
     if (variant == Float)
-      return (int64_t)std::get<double>(this->value);
+      return (int64_t) std::get<double>(this->value);
     else
       return std::get<int64_t>(this->value);
   }
@@ -322,9 +342,10 @@ inline std::optional<double> CsvValues::get_flt() const {
     return {};
   } else {
     if (variant == Integer)
-      return (double)std::get<int64_t>(this->value);
+      return (double) std::get<int64_t>(this->value);
     else
       return std::get<double>(this->value);
   }
 }
+
 #endif // CSV_H

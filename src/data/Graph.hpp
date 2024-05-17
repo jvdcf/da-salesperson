@@ -12,18 +12,25 @@
 
 #include <cstdint>
 #include <optional>
-#include "../../lib/MutablePriorityQueue.h"
-#define INF std::numeric_limits<double>::max()
 #include <stdexcept>
 #include <unordered_map>
+#include "../../lib/MutablePriorityQueue.h"
 
-template <typename T> class Graph;
-template <typename T> class Vertex;
-template <typename T> class Edge;
+#define INF std::numeric_limits<double>::max()
+
+template<typename T>
+class Graph;
+
+template<typename T>
+class Vertex;
+
+template<typename T>
+class Edge;
 
 // =================================================================================================
 
-template <typename T> class Edge {
+template<typename T>
+class Edge {
 private:
   uint64_t orig; /// Origin vertex id
   uint64_t dest; /// Destination vertex id
@@ -37,7 +44,7 @@ public:
   Edge() = default;
 
   Edge(uint64_t orig, uint64_t dest, double weight)
-      : orig(orig), dest(dest), weight(weight) {}
+          : orig(orig), dest(dest), weight(weight) {}
 
   [[nodiscard]] uint64_t getOrig() const { return orig; }
 
@@ -54,7 +61,8 @@ public:
 
 // =================================================================================================
 
-template <typename T> class Vertex {
+template<typename T>
+class Vertex {
   friend class Graph<T>;
 
 private:
@@ -93,7 +101,7 @@ public:
   }
 
   // Required by MutablePriorityQueue
-  bool operator<(Vertex<T> & vertex) const {
+  bool operator<(Vertex<T> &vertex) const {
     return this->dist < vertex.dist;
   }
 
@@ -126,7 +134,8 @@ public:
 
 // =================================================================================================
 
-template <typename T> class Graph {
+template<typename T>
+class Graph {
 private:
   std::unordered_map<uint64_t, Vertex<T>> vertexSet;
 
@@ -177,7 +186,7 @@ public:
 
   [[nodiscard]] Edge<T> *findEdge(uint64_t orig, uint64_t dest) {
     std::unordered_map<uint64_t, Edge<T>> &edgs =
-        this->vertexSet.at(orig).getAdj();
+            this->vertexSet.at(orig).getAdj();
     if (auto itr = edgs.find(dest); itr != edgs.end()) {
       return &(itr->second);
     }
