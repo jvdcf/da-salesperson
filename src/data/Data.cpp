@@ -194,7 +194,7 @@ TSPResult heuristic_impl(Graph<Info> &root) {
   for (uint64_t i = 0; i < vertex_set.size(); ++i) {
     vertex_set[i].setProcessing(false);
   }
-  return TSPResult(path, cost);
+  return TSPResult(cost, path);
 }
 
 TSPResult Data::heuristic() {
