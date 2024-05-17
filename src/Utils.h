@@ -30,17 +30,13 @@ public:
     return v[d(gen)];
   }
 
-  static void prim(Graph<Info> *g);
+  static void prim(Graph<Info> &g);
 
-  static std::vector<uint64_t> MSTdfs(Graph<Info> *g);
+  static std::vector<uint64_t> MSTdfs(Graph<Info> &g);
 
-  static void MSTdfsVisit(Vertex<Info> &v, std::vector<uint64_t> &res, Graph<Info> *g);
+  static void MSTdfsVisit(Vertex<Info> &v, std::vector<uint64_t> &res, Graph<Info> &g);
 
-  static bool isConnected(Graph<Info> *g);
-
-  static void dfs(Vertex<Info> *v, Graph<Info> * );
-
-  static double weight(uint64_t v, uint64_t u, Graph<Info> *g);
+  static double weight(uint64_t v, uint64_t u, Graph<Info> &g);
 };
 
 

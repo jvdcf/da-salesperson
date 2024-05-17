@@ -143,31 +143,27 @@ TSPResult Data::backtracking() {
 
 // ====================================================================================================
 
+
 TSPResult Data::triangular() {
   // Prim's algorithm - Minimum Spanning Tree
-  Utils::prim(&g);
+  Utils::prim(g);
 
   // DFS - Depth First Search in the MST
-  std::vector<uint64_t> dfs = Utils::MSTdfs(&g);
+  std::vector<uint64_t> path = Utils::MSTdfs(g);
 
   // Calculate the cost and the path
   double totalCost = 0;
-  std::vector<uint64_t> path;
 
-  for (int i=0; i<dfs.size()-1; i++){
-    double cost = Utils::weight(dfs[i], dfs[i+1], &g);
+  for (int i=0; i<path.size()-1; i++){
+    double cost = Utils::weight(path[i], path[i+1], g);
     totalCost += cost;
-    path.push_back(dfs[i]);
   }
 
-  // Add last vertex to path
-  path.push_back(dfs[dfs.size()-1]);
-
   // Deal with the last edge (returning to the beginning)
-  totalCost +=  Utils::weight(dfs[dfs.size()-1], dfs[0], &g);
+  totalCost +=  Utils::weight(path[path.size()-1], path[0], g);
 
   // Add the first vertex to the end of the path
-  path.push_back(dfs[0]);
+  path.push_back(g.findVertex(path[0]).getId());
 
   return TSPResult{totalCost, path};
 }
