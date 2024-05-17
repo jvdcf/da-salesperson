@@ -211,22 +211,32 @@ TSPResult Data::heuristic() {
 #define ITERATIONS 100
 #define DEFAULT_PHEROMONE 0.1
 
-TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &v) {
+void updatePheromoneLevels(Graph<Info> &g, TSPResult &result) {
+  double pheromone = HYPERPARAMETER / result.cost * DEGREDACTION_RATE;
+  std::cout << "Pheromone: " << pheromone << std::endl;
+  for (int i = 0; i < result.path.size() - 1; ++i) {
+    Edge<Info> *e = g.findEdge(result.path[i], result.path[i + 1]);
+    e->setFlow(e->getFlow() + pheromone);
+  }
+}
+
+TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
   for (auto& [_, i]: g.getVertexSet()) i.setVisited(false);
-  TSPResult result = {0, {v.getId()}};
-  Vertex<Info> &current = v;
+  TSPResult result = {0, {start.getId()}};
+  uint64_t currentId = start.getId();
 
   // Loop through all vertices
-  for (int steps = 0; steps < g.getNumVertex() - 1; ++steps) {
-    current.setVisited(true);
+  for (int steps = 0; steps < g.getNumVertex(); ++steps) {
+    Vertex<Info> &currentNode = g.findVertex(currentId);
+    currentNode.setVisited(true);
     std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges;
     std::vector<double> probabilities;
 
     // Calculate probabilities for each edge
-    for (const auto &[dest, e]: current.getAdj()) {
+    for (const auto &[dest, e]: currentNode.getAdj()) {
       // Ignore unwanted edges
       if (g.findVertex(dest).isVisited()) {
-        if (dest == START_VERTEX && steps == g.getNumVertex() - 1) {
+        if (dest == start.getId() && steps == g.getNumVertex() - 1) {
           possibleEdges.push_back(std::ref(e));
           probabilities.push_back(1);
           break;
@@ -240,20 +250,26 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &v) {
       probabilities.push_back(probability);
     }
 
+    if (possibleEdges.empty()) {
+      updatePheromoneLevels(g, result);
+      return {DBL_MAX, result.path};
+    } // No possible edges
+
+    // Print probabilities: DEBUG
+    /*std::cout << "Probabilities for Vertex " << currentId << " : ";
+    for (int i = 0; i < probabilities.size(); ++i) {
+      std::cout << "[" << possibleEdges[i].get().getDest() << "] " << probabilities[i] << " ";
+    }
+    std::cout << std::endl;*/
+
     // Select edge
     auto& edgeSelected = Utils::weightedRandomElement(possibleEdges, probabilities).get();
-    v = g.findVertex(edgeSelected.getDest());
+    currentId = edgeSelected.getDest();
     result.cost += edgeSelected.getWeight();
-    result.path.push_back(v.getId());
+    result.path.push_back(currentId);
   }
 
-  // Update pheromone levels
-  double pheromone = HYPERPARAMETER / result.cost * DEGREDACTION_RATE;
-  for (int i = 0; i < result.path.size() - 1; ++i) {
-    Edge<Info> *e = g.findEdge(result.path[i], result.path[i + 1]);
-    e->setFlow(e->getFlow() + pheromone);
-  }
-
+  updatePheromoneLevels(g, result);
   return result;
 }
 
@@ -269,8 +285,12 @@ std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
   TSPResult bestResult = {DBL_MAX, {}};
   for (int _ = 0; _ < ITERATIONS; ++_) {
     TSPResult res = traverseGraphUsingAnts(g, v);
-    std::cout << "Iteration " << _ << " : " << res << std::endl;
-    if (res < bestResult) bestResult = res;
+    std::cout << "Iteration " << _ << " : " << res.cost;
+    if (res < bestResult) {
+      bestResult = res;
+      std::cout << " [!]";
+    }
+    std::cout << std::endl;
   }
 
   return bestResult;
