@@ -12,6 +12,8 @@
 
 #include <cstdint>
 #include <optional>
+#include "../../lib/MutablePriorityQueue.h"
+#define INF std::numeric_limits<double>::max()
 #include <stdexcept>
 #include <unordered_map>
 
@@ -45,13 +47,9 @@ public:
 
   [[nodiscard]] double getFlow() const { return flow; }
 
-  [[nodiscard]] bool isSelected() const { return selected; }
-
   void setWeight(double w) { this->weight = w; }
 
   void setFlow(double f) { this->flow = f; }
-
-  void setSelected(bool s) { this->selected = s; }
 };
 
 // =================================================================================================
@@ -94,6 +92,11 @@ public:
     return *this;
   }
 
+  // Required by MutablePriorityQueue
+  bool operator<(Vertex<T> & vertex) const {
+    return this->dist < vertex.dist;
+  }
+
   [[nodiscard]] T getInfo() const { return info; }
 
   [[nodiscard]] uint64_t getId() const { return id; }
@@ -108,7 +111,7 @@ public:
 
   [[nodiscard]] double getDist() const { return dist; }
 
-  [[nodiscard]] Edge<T> &getPath() const { return path; }
+  [[nodiscard]] uint64_t getPath() const { return path; }
 
   void setVisited(bool v) { this->visited = v; }
 
@@ -116,7 +119,9 @@ public:
 
   void setDist(double d) { this->dist = d; }
 
-  void setPath(Edge<T> &p) { this->path = p; }
+  void setPath(uint64_t p) { this->path = p; }
+
+  friend class MutablePriorityQueue<Vertex>;
 };
 
 // =================================================================================================
@@ -181,5 +186,6 @@ public:
 
   int getNumVertex() { return vertexSet.size(); }
 };
+
 
 #endif // DA2324_PRJ2_G163_GRAPH_HPP
