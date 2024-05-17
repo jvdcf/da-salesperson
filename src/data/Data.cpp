@@ -1,13 +1,18 @@
 #include "Data.h"
 #include "../Utils.h"
+#include "Graph.hpp"
+#include <cfloat>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <utility>
+#include <climits>
+#include <cfloat>
 
 // Constructors
-// =================================================================================================
+// ====================================================================================================
 
 std::istringstream Data::prepareCsv(const std::string &path) {
   std::ifstream file(path, std::ios::in | std::ios::binary);
@@ -40,7 +45,8 @@ bool Data::saveNode(std::vector<CsvValues> const &line, Graph<Info> &g) {
   auto longitude = line[1].get_flt();
   auto latitude = line[2].get_flt();
   if (id.has_value() && longitude.has_value() && latitude.has_value()) {
-    g.addVertex(Info(id.value(), longitude.value(), latitude.value()), id.value());
+    g.addVertex(Info(id.value(), longitude.value(), latitude.value()),
+                id.value());
     return true;
   } else {
     return false;
@@ -80,11 +86,64 @@ Graph<Info> &Data::getGraph() { return g; }
 // Functions
 // ====================================================================================================
 
-TSPResult Data::backtracking() {
-  // TODO
-  error("Not yet implemented");
-  return {};
+std::vector<std::reference_wrapper<const Edge<Info>>>
+generatePossibleEdges(Graph<Info> &g, Vertex<Info> &v, const std::vector<uint64_t> &path) {
+  std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges;
+  if (path.size() == g.getNumVertex() - 1) {  // If all vertices have been visited, add edge to start
+    for (const auto &e: v.getAdj()) {
+      if (e.first == START_VERTEX) {
+        possibleEdges.push_back(std::ref(e.second));
+        break;
+      }
+    }
+  } else {
+    for (const auto &e: v.getAdj()) { // Add all edges that their destination vertex hasn't been visited yet
+      if (e.first == START_VERTEX) continue;
+      if (std::find(path.begin(), path.end(), e.first) != path.end()) continue;
+      possibleEdges.push_back(std::ref(e.second));
+    }
+  }
+  return possibleEdges;
 }
+
+TSPResult btDFS(Graph<Info> &g, const TSPResult &p, Vertex<Info> &v, double &bestCost) {
+  auto possibleEdges = generatePossibleEdges(g, v, p.path);
+  TSPResult bestResult = {DBL_MAX, {}};
+
+  // Base cases
+  if (p.path.size() == g.getNumVertex()) {
+    if (p.cost < bestCost) bestCost = p.cost;
+    return {p.cost, p.path};    // Hamiltonian cycle complete
+  }
+
+  // Bounding
+  if (p.cost >= bestCost) return bestResult;
+
+  // Generate results and pick the best one
+  for (std::reference_wrapper<const Edge<Info>> e: possibleEdges) {
+    double nextCost = p.cost + e.get().getWeight();
+    auto nextPath = p.path;
+    Vertex<Info> &nextVertex = g.findVertex(e.get().getDest());
+    nextPath.push_back(nextVertex.getId());
+    TSPResult next = {nextCost, nextPath};
+    auto result = btDFS(g, next, nextVertex, bestCost);
+    if (result < bestResult) bestResult = result;
+  }
+
+  return bestResult;
+}
+
+TSPResult Data::backtracking() {
+  Vertex<Info> &start = g.findVertex(START_VERTEX);
+  TSPResult p = {0, {}};
+  auto bestCost = DBL_MAX;
+
+  TSPResult res = btDFS(g, p, start, bestCost);
+  res.path.insert(res.path.begin(), START_VERTEX);
+  return res;
+}
+
+// ====================================================================================================
 
 TSPResult Data::triangular() {
   // Prim's algorithm - Minimum Spanning Tree
@@ -115,10 +174,56 @@ TSPResult Data::triangular() {
   return TSPResult{path, totalCost};
 }
 
+double calc_weight(Graph<Info> &root, uint64_t src, uint64_t dst) {
+  auto &vertex_set = root.getVertexSet();
+  Edge<Info> *ed = root.findEdge(src, dst);
+  double weight = 0;
+  if (ed != nullptr) {
+    weight = ed->getWeight();
+  } else {
+    weight = vertex_set[src].getInfo().distance(vertex_set[dst].getInfo());
+  }
+  return weight;
+}
+
+TSPResult heuristic_impl(Graph<Info> &root) {
+  double cost = 0;
+  double min = DBL_MAX;
+  uint64_t selected = 0;
+  auto &vertex_set = root.getVertexSet();
+  std::vector<uint64_t> path;
+  path.reserve(root.getVertexSet().size() + 1);
+  path.push_back(0);
+  vertex_set[0].setProcessing(true);
+  for (uint64_t i = 0; i < vertex_set.size() - 1; ++i) {
+    for (uint64_t j = 0; j < vertex_set.size(); ++j) {
+      if (vertex_set[j].isProcessing())
+        continue;
+      if (j == path.back())
+        continue;
+      double weight = calc_weight(root, path.back(), j);
+      if (weight < min) {
+        min = weight;
+        selected = j;
+      }
+    }
+    path.push_back(selected);
+    vertex_set[selected].setProcessing(true);
+    cost += min;
+    min = DBL_MAX;
+  }
+  cost += calc_weight(root, path.back(), 0);
+  path.push_back(0);
+  for (uint64_t i = 0; i < vertex_set.size(); ++i) {
+    vertex_set[i].setProcessing(false);
+  }
+  return {cost, path};
+}
+
 TSPResult Data::heuristic() {
   // TODO
-  error("Not yet implemented");
-  return {};
+  // error("Not yet implemented");
+  return heuristic_impl(this->g);
 }
 
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {

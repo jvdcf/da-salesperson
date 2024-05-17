@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <unordered_map>
+#include <algorithm>
 #include "Utils.h"
 #include "../lib/MutablePriorityQueue.h"
 

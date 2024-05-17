@@ -38,7 +38,7 @@ void Runtime::printHelp() {
             << comment << "      Prints the number of vertices and edges.\n"
             << keyword << "  backtracking\n"
             << comment << "      Resolves the TSP problem using backtracking.\n"
-            << comment << "      If the graph is not complete, this command will generate the remaining edges using the coordinates inside nodes.csv.\n"
+            << comment << "      This command also works for disconnected graphs.\n"
             << keyword << "  triangular\n"
             << comment << "      Generates an approximation of the TSP problem using the triangular heuristic.\n"
             << comment << "      If the graph is not complete, this command will generate the remaining edges using the coordinates inside nodes.csv.\n"

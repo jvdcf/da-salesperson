@@ -3,39 +3,41 @@
 
 /**
  * @file NewGraph.hpp
- * @brief A more minimalistic graph implementation inspired by the one used in the practical classes.
- * @details This implementation uses unordered maps to store vertices and edges, for faster access, compromising
- * memory usage. It also uses a more object-oriented approach, avoiding the use of pointers and dynamic memory.
+ * @brief A more minimalistic graph implementation inspired by the one used in
+ * the practical classes.
+ * @details This implementation uses unordered maps to store vertices and edges,
+ * for faster access, compromising memory usage. It also uses a more
+ * object-oriented approach, avoiding the use of pointers and dynamic memory.
  */
 
 #include <cstdint>
-#include <unordered_map>
-#include <stdexcept>
 #include <optional>
 #include "../../lib/MutablePriorityQueue.h"
-
 #define INF std::numeric_limits<double>::max()
+#include <stdexcept>
+#include <unordered_map>
 
-template<typename T> class Graph;
-template<typename T> class Vertex;
-template<typename T> class Edge;
+template <typename T> class Graph;
+template <typename T> class Vertex;
+template <typename T> class Edge;
 
 // =================================================================================================
 
-template<typename T>
-class Edge {
+template <typename T> class Edge {
 private:
-  uint64_t orig;  /// Origin vertex id
-  uint64_t dest;  /// Destination vertex id
-  double weight;  /// Edge weight
+  uint64_t orig; /// Origin vertex id
+  uint64_t dest; /// Destination vertex id
+  double weight; /// Edge weight
 
 protected:
-  double flow = 0.0;      /// Used for flow-related algorithms
+  double flow = 0.0;     /// Used for flow-related algorithms
+  bool selected = false; /// Used to mark the edge as artificially generated
 
 public:
   Edge() = default;
 
-  Edge(uint64_t orig, uint64_t dest, double weight) : orig(orig), dest(dest), weight(weight) {}
+  Edge(uint64_t orig, uint64_t dest, double weight)
+      : orig(orig), dest(dest), weight(weight) {}
 
   [[nodiscard]] uint64_t getOrig() const { return orig; }
 
@@ -52,13 +54,13 @@ public:
 
 // =================================================================================================
 
-template<typename T>
-class Vertex {
+template <typename T> class Vertex {
   friend class Graph<T>;
+
 private:
-  uint64_t id;  /// Vertex id
-  T info;       /// Information stored in the vertex
-  std::unordered_map<uint64_t, Edge<T>> edges;  /// Adjacency list
+  uint64_t id; /// Vertex id
+  T info;      /// Information stored in the vertex
+  std::unordered_map<uint64_t, Edge<T>> edges; /// Adjacency list
 
 protected:
   bool visited = false;       // Used by traversal algorithms
@@ -72,9 +74,7 @@ protected:
     return edges[dest.getId()];
   }
 
-  void removeEdge(Vertex<T> &dest) {
-    edges.erase(dest.getId());
-  }
+  void removeEdge(Vertex<T> &dest) { edges.erase(dest.getId()); }
 
 public:
   Vertex() = default;
@@ -101,7 +101,9 @@ public:
 
   [[nodiscard]] uint64_t getId() const { return id; }
 
-  [[nodiscard]] std::unordered_map<uint64_t, Edge<T>> &getAdj() { return edges; }
+  [[nodiscard]] std::unordered_map<uint64_t, Edge<T>> &getAdj() {
+    return edges;
+  }
 
   [[nodiscard]] bool isVisited() const { return visited; }
 
@@ -124,63 +126,66 @@ public:
 
 // =================================================================================================
 
-template<typename T>
-class Graph {
+template <typename T> class Graph {
 private:
   std::unordered_map<uint64_t, Vertex<T>> vertexSet;
+
 public:
   Graph() = default;
 
-  explicit Graph(unsigned int numVertex) {
-    vertexSet.reserve(numVertex);
-  }
+  explicit Graph(unsigned int numVertex) { vertexSet.reserve(numVertex); }
 
-  [[nodiscard]] std::unordered_map<uint64_t, Vertex<T>> &getVertexSet() { return vertexSet; }
+  [[nodiscard]] std::unordered_map<uint64_t, Vertex<T>> &getVertexSet() {
+    return vertexSet;
+  }
 
   Vertex<T> &addVertex(T info, uint64_t id) {
     vertexSet[id] = Vertex<T>(info, id);
     return vertexSet[id];
   }
 
-  void removeVertex(uint64_t id) {
-    vertexSet.erase(id);
-  }
+  void removeVertex(uint64_t id) { vertexSet.erase(id); }
 
   Edge<T> &addEdge(Vertex<T> &orig, Vertex<T> &dest, double weight) {
     return orig.addEdge(dest, weight);
   }
 
-  void removeEdge(Vertex<T> &orig, Vertex<T> &dest) {
-    orig.removeEdge(dest);
-  }
+  void removeEdge(Vertex<T> &orig, Vertex<T> &dest) { orig.removeEdge(dest); }
 
   void addBidirectionalEdge(Vertex<T> &orig, Vertex<T> &dest, double weight) {
     addEdge(orig, dest, weight);
     addEdge(dest, orig, weight);
   }
 
-  Vertex<T> &findVertex(uint64_t id) {
-    return vertexSet.at(id);
-  }
+  Vertex<T> &findVertex(uint64_t id) { return vertexSet.at(id); }
 
   bool hasVertex(uint64_t id) {
-    try { vertexSet.at(id); return true; }
-    catch (std::out_of_range &e) { return false; }
+    try {
+      vertexSet.at(id);
+      return true;
+    } catch (std::out_of_range &e) {
+      return false;
+    }
   }
 
   Vertex<T> &findOrAddVertex(uint64_t id, T info) {
-    if (!hasVertex(id)) return addVertex(info, id);
-    else return findVertex(id);
+    if (!hasVertex(id))
+      return addVertex(info, id);
+    else
+      return findVertex(id);
   }
 
-  [[nodiscard]] Edge<T>* findEdge(uint64_t orig, uint64_t dest) {
-    try { return &vertexSet.at(orig).getAdj().at(dest); }
-    catch (std::out_of_range &e) { return nullptr; }
+  [[nodiscard]] Edge<T> *findEdge(uint64_t orig, uint64_t dest) {
+    std::unordered_map<uint64_t, Edge<T>> &edgs =
+        this->vertexSet.at(orig).getAdj();
+    if (auto itr = edgs.find(dest); itr != edgs.end()) {
+      return &(itr->second);
+    }
+    return nullptr;
   }
 
-  int getNumVertex() {
-    return vertexSet.size();
-  }
+  int getNumVertex() { return vertexSet.size(); }
 };
 
-#endif //DA2324_PRJ2_G163_GRAPH_HPP
+
+#endif // DA2324_PRJ2_G163_GRAPH_HPP

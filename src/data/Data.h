@@ -1,8 +1,8 @@
 #ifndef DA2324_PRJ1_G163_DATA_H
 #define DA2324_PRJ1_G163_DATA_H
 
-#include "Graph.hpp"
 #include "../CSV.hpp"
+#include "Graph.hpp"
 #include "Info.h"
 #include <cstdint>
 #include <optional>
@@ -11,17 +11,23 @@
 
 typedef bool (*savefn_t)(std::vector<CsvValues> const &, Graph<Info> &);
 
+#define START_VERTEX 0
+
 struct TSPResult {
-  std::vector<Info> path;
   double cost;
+  std::vector<uint64_t> path;
 
   friend std::ostream &operator<<(std::ostream &os, const TSPResult &res) {
-    os << "Cost: " << res.cost << std::endl;
+    os << "Cost: " << res.cost << " | ";
     os << "Path: ";
     for (const auto &i : res.path) {
-      os << i.getId() << " ";
+      os << i << " ";
     }
     return os;
+  }
+
+  bool operator<(const TSPResult &res) const {
+    return this->cost < res.cost;
   }
 };
 
@@ -53,6 +59,14 @@ public:
    */
   Graph<Info> &getGraph();
 
+  /**
+   * @brief Backtracking algorithm to solve the Travelling Salesman Problem
+   * @details Bounding:
+   * - If the current cost is already higher than the best cost, stop exploring this path
+   * - If the current path reaches a vertex that has already been visited, stop exploring this path
+   * @note Time Complexity: O(n!) where n is the number of vertices
+   * @return A TSPResult with the cost of the best path and the path itself
+   */
   TSPResult backtracking();
   TSPResult triangular();
   TSPResult heuristic();
