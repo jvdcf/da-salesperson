@@ -8,7 +8,6 @@
 #include "data/Info.h"
 #include "data/Graph.hpp"
 
-
 /**
  * @brief Auxiliary functions
  * @details This class contains static and auxiliary functions used throughout the project.
@@ -22,6 +21,20 @@ public:
 
   static double convertToRadians(double angle);
   static double haversineDistance(double lat1, double lon1, double lat2, double lon2);
+
+  static void prim(Graph<Info> *g);
+
+  static std::vector<uint64_t> MSTdfs(Graph<Info> *g);
+
+  static void MSTdfsVisit(Vertex<Info> &v, std::vector<uint64_t> &res, Graph<Info> *g);
+
+  static bool isConnected(Graph<Info> *g);
+
+  static void dfs(Vertex<Info> *v, Graph<Info> * );
+
+  static double weight(uint64_t v, uint64_t u, Graph<Info> *g);
+
+
 };
 
 

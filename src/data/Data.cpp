@@ -146,9 +146,32 @@ TSPResult Data::backtracking() {
 // ====================================================================================================
 
 TSPResult Data::triangular() {
-  // TODO
-  error("Not yet implemented");
-  return {};
+  // Prim's algorithm - Minimum Spanning Tree
+  Utils::prim(&g);
+
+  // DFS - Depth First Search in the MST
+  std::vector<uint64_t> dfs = Utils::MSTdfs(&g);
+
+  // Calculate the cost and the path
+  double totalCost = 0;
+  std::vector<uint64_t> path;
+
+  for (int i=0; i<dfs.size()-1; i++){
+    double cost = Utils::weight(dfs[i], dfs[i+1], &g);
+    totalCost += cost;
+    path.push_back(dfs[i]);
+  }
+
+  // Add last vertex to path
+  path.push_back(dfs[dfs.size()-1]);
+
+  // Deal with the last edge (returning to the beginning)
+  totalCost +=  Utils::weight(dfs[dfs.size()-1], dfs[0], &g);
+
+  // Add the first vertex to the end of the path
+  path.push_back(dfs[0]);
+
+  return TSPResult{totalCost, path};
 }
 
 double calc_weight(Graph<Info> &root, uint64_t src, uint64_t dst) {
@@ -206,5 +229,16 @@ TSPResult Data::heuristic() {
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
   // TODO
   error("Not yet implemented");
+
+  // Check if the graph is connected
+  if (!Utils::isConnected(&g)) {
+    std::cout << "Graph is not connected" << std::endl;
+    return {};
+  }
+
+  // Find a hamiltonian path
+
+
+  // nearest neighbor
   return {};
 }
