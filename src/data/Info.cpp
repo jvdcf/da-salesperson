@@ -8,7 +8,7 @@ Info::Info(uint64_t id) {
   this->lon = std::nullopt;
 }
 
-Info::Info(uint64_t id, double  lat, double lon) {
+Info::Info(uint64_t id, double lat, double lon) {
   this->id = id;
   this->lat = lat;
   this->lon = lon;
@@ -30,7 +30,7 @@ double Info::distance(const Info &other) const {
   return Utils::haversineDistance(
           this->lat.value(), this->lon.value(),
           other.getLat().value(), other.getLon().value()
-          );
+  );
 }
 
 bool Info::operator==(const Info &rhs) const {

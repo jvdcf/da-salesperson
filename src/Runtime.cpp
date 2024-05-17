@@ -59,7 +59,7 @@ void Runtime::handleQuit() {
 void Runtime::handleCount() {
   auto &g = data->getGraph();
   unsigned int edgeCount = 0;
-  for (auto v : g.getVertexSet()) {
+  for (auto v: g.getVertexSet()) {
     edgeCount += v.second.getAdj().size();
   }
   std::cout << "Number of vertices: " << g.getVertexSet().size() << std::endl;
@@ -113,27 +113,27 @@ void Runtime::processArgs(std::istream &args) {
 
   clock.start();
   switch (cmd.command) {
-  case Command::Help:
-    return printHelp();
-  case Command::Quit:
-    return handleQuit();
-  case Command::Count:
-    return handleCount();
-  case Command::Backtracking:
-    handleBacktracking();
-    break;
-  case Command::Triangular:
-    handleTriangular();
-    break;
-  case Command::Heuristic:
-    handleHeuristic();
-    break;
-  case Command::Disconnected:
-    handleDisconnected(cmd);
-    break;
-  default:
-    info("Type 'help' to see the available commands.");
-    return;
+    case Command::Help:
+      return printHelp();
+    case Command::Quit:
+      return handleQuit();
+    case Command::Count:
+      return handleCount();
+    case Command::Backtracking:
+      handleBacktracking();
+      break;
+    case Command::Triangular:
+      handleTriangular();
+      break;
+    case Command::Heuristic:
+      handleHeuristic();
+      break;
+    case Command::Disconnected:
+      handleDisconnected(cmd);
+      break;
+    default:
+      info("Type 'help' to see the available commands.");
+      return;
   }
   clock.stop();
   std::cout << Color(183, 189, 248).foreground() << "Time elapsed: " << clock << Color::clear() << std::endl;

@@ -16,14 +16,18 @@
 
 class Utils {
 public:
-  static unsigned countLines(const std::string& path);
-  static void printLoading(unsigned current, unsigned total, const std::string& path);
+  static unsigned countLines(const std::string &path);
+
+  static void printLoading(unsigned current, unsigned total, const std::string &path);
+
   static void clearLine();
 
   static double convertToRadians(double angle);
+
   static double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 
-  template<class T> static T weightedRandomElement(const std::vector<T> &v, const std::vector<double> &weights){
+  template<class T>
+  static T weightedRandomElement(const std::vector<T> &v, const std::vector<double> &weights) {
     std::random_device rd;
     std::mt19937 gen(rd());
     std::discrete_distribution<> d(weights.begin(), weights.end());
@@ -42,7 +46,8 @@ public:
 
 class Color {
 public:
-  Color(uint8_t r, uint8_t g, uint8_t b): red(r),green(g),blue(b){};
+  Color(uint8_t r, uint8_t g, uint8_t b) : red(r), green(g), blue(b) {};
+
   std::string foreground() const {
 #ifndef _WIN32
     return "\033[38;2;" + std::to_string(red) + ";" + std::to_string(green) + ";" + std::to_string(blue) + "m";
@@ -58,6 +63,7 @@ public:
     return "";
 #endif
   }
+
   static std::string clear() {
 #ifndef _WIN32
     return "\033[0m";
@@ -75,24 +81,30 @@ private:
 [[noreturn]] void panic(std::string s);
 
 void error(std::string s);
+
 void info(std::string s);
+
 void warning(std::string s);
 
 class Clock {
 public:
   Clock();
+
   void start();
+
   void stop();
+
   [[nodiscard]] double getTime() const;
-  friend std::ostream& operator<<(std::ostream& os, const Clock& c) {
+
+  friend std::ostream &operator<<(std::ostream &os, const Clock &c) {
     os << c.getTime() << "ms";
     return os;
   }
+
 private:
   std::chrono::time_point<std::chrono::high_resolution_clock> start_time;
   std::chrono::time_point<std::chrono::high_resolution_clock> end_time;
 };
-
 
 
 #endif // !UTILS

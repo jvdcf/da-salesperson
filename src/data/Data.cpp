@@ -154,19 +154,21 @@ TSPResult Data::triangular() {
   // Calculate the cost and the path
   double totalCost = 0;
 
-  for (int i=0; i<path.size()-1; i++){
-    double cost = Utils::weight(path[i], path[i+1], g);
+  for (int i = 0; i < path.size() - 1; i++) {
+    double cost = Utils::weight(path[i], path[i + 1], g);
     totalCost += cost;
   }
 
   // Deal with the last edge (returning to the beginning)
-  totalCost +=  Utils::weight(path[path.size()-1], path[0], g);
+  totalCost += Utils::weight(path[path.size() - 1], path[0], g);
 
   // Add the first vertex to the end of the path
   path.push_back(g.findVertex(path[0]).getId());
 
   return TSPResult{totalCost, path};
 }
+
+// ====================================================================================================
 
 double calc_weight(Graph<Info> &root, uint64_t src, uint64_t dst) {
   auto &vertex_set = root.getVertexSet();
@@ -215,8 +217,6 @@ TSPResult heuristic_impl(Graph<Info> &root) {
 }
 
 TSPResult Data::heuristic() {
-  // TODO
-  // error("Not yet implemented");
   return heuristic_impl(this->g);
 }
 
@@ -238,7 +238,7 @@ void updatePheromoneLevels(Graph<Info> &g, TSPResult &result) {
 }
 
 TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
-  for (auto& [_, i]: g.getVertexSet()) i.setVisited(false);
+  for (auto &[_, i]: g.getVertexSet()) i.setVisited(false);
   TSPResult result = {0, {start.getId()}};
   uint64_t currentId = start.getId();
 
@@ -273,7 +273,7 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
     }
 
     // Select edge
-    auto& edgeSelected = Utils::weightedRandomElement(possibleEdges, probabilities).get();
+    auto &edgeSelected = Utils::weightedRandomElement(possibleEdges, probabilities).get();
     currentId = edgeSelected.getDest();
     result.cost += edgeSelected.getWeight();
     result.path.push_back(currentId);
@@ -285,9 +285,9 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
 
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId, unsigned iterations) {
   // Set default values
-  for (auto& [_, v]: g.getVertexSet()) {
+  for (auto &[_, v]: g.getVertexSet()) {
     v.setVisited(false);
-    for (auto& [_, e]: v.getAdj())
+    for (auto &[_, e]: v.getAdj())
       e.setFlow(DEFAULT_PHEROMONE);
   }
 
