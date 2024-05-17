@@ -1,8 +1,8 @@
 #ifndef DA2324_PRJ1_G163_DATA_H
 #define DA2324_PRJ1_G163_DATA_H
 
-#include "Graph.hpp"
 #include "../CSV.hpp"
+#include "Graph.hpp"
 #include "Info.h"
 #include <cstdint>
 #include <optional>
