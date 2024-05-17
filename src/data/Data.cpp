@@ -1,10 +1,14 @@
 #include "Data.h"
 #include "../Utils.h"
+#include "Graph.hpp"
+#include <cfloat>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <sys/types.h>
+#include <utility>
 
 // Constructors
 // =================================================================================================
@@ -40,7 +44,8 @@ bool Data::saveNode(std::vector<CsvValues> const &line, Graph<Info> &g) {
   auto longitude = line[1].get_flt();
   auto latitude = line[2].get_flt();
   if (id.has_value() && longitude.has_value() && latitude.has_value()) {
-    g.addVertex(Info(id.value(), longitude.value(), latitude.value()), id.value());
+    g.addVertex(Info(id.value(), longitude.value(), latitude.value()),
+                id.value());
     return true;
   } else {
     return false;
@@ -92,10 +97,56 @@ TSPResult Data::triangular() {
   return {};
 }
 
+double calc_weight(Graph<Info> &root, uint64_t src, uint64_t dst) {
+  auto &vertex_set = root.getVertexSet();
+  Edge<Info> *ed = root.findEdge(src, dst);
+  double weight = 0;
+  if (ed != nullptr) {
+    weight = ed->getWeight();
+  } else {
+    weight = vertex_set[src].getInfo().distance(vertex_set[dst].getInfo());
+  }
+  return weight;
+}
+
+TSPResult heuristic_impl(Graph<Info> &root) {
+  double cost = 0;
+  double min = DBL_MAX;
+  uint64_t selected = 0;
+  auto &vertex_set = root.getVertexSet();
+  std::vector<uint64_t> path;
+  path.reserve(root.getVertexSet().size() + 1);
+  path.push_back(0);
+  vertex_set[0].setProcessing(true);
+  for (uint64_t i = 0; i < vertex_set.size() - 1; ++i) {
+    for (uint64_t j = 0; j < vertex_set.size(); ++j) {
+      if (vertex_set[j].isProcessing())
+        continue;
+      if (j == path.back())
+        continue;
+      double weight = calc_weight(root, path.back(), j);
+      if (weight < min) {
+        min = weight;
+        selected = j;
+      }
+    }
+    path.push_back(selected);
+    vertex_set[selected].setProcessing(true);
+    cost += min;
+    min = DBL_MAX;
+  }
+  cost += calc_weight(root, path.back(), 0);
+  path.push_back(0);
+  for (uint64_t i = 0; i < vertex_set.size(); ++i) {
+    vertex_set[i].setProcessing(false);
+  }
+  return TSPResult(path, cost);
+}
+
 TSPResult Data::heuristic() {
   // TODO
-  error("Not yet implemented");
-  return {};
+  // error("Not yet implemented");
+  return heuristic_impl(this->g);
 }
 
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {

@@ -1,8 +1,8 @@
 #ifndef DA2324_PRJ1_G163_DATA_H
 #define DA2324_PRJ1_G163_DATA_H
 
-#include "Graph.hpp"
 #include "../CSV.hpp"
+#include "Graph.hpp"
 #include "Info.h"
 #include <cstdint>
 #include <optional>
@@ -12,14 +12,14 @@
 typedef bool (*savefn_t)(std::vector<CsvValues> const &, Graph<Info> &);
 
 struct TSPResult {
-  std::vector<Info> path;
+  std::vector<uint64_t> path;
   double cost;
 
   friend std::ostream &operator<<(std::ostream &os, const TSPResult &res) {
     os << "Cost: " << res.cost << std::endl;
     os << "Path: ";
     for (const auto &i : res.path) {
-      os << i.getId() << " ";
+      os << i << " ";
     }
     return os;
   }
