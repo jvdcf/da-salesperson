@@ -93,3 +93,10 @@ double Utils::haversineDistance(double lat1, double lon1, double lat2, double lo
 
   return R * c;
 }
+
+double Utils::weight(uint64_t v, uint64_t u, Graph<Info> & g) {
+  Edge<Info>* e =g.findEdge(v, u);
+
+  if (e) return e->getWeight();
+  return g.findVertex(v).getInfo().distance(g.findVertex(u).getInfo());
+}

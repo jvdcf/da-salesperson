@@ -22,6 +22,8 @@ public:
 
   static double convertToRadians(double angle);
   static double haversineDistance(double lat1, double lon1, double lat2, double lon2);
+
+  static double weight(uint64_t v, uint64_t u, Graph<Info> &g);
 };
 
 

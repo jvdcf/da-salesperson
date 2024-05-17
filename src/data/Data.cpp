@@ -7,6 +7,7 @@
 #include <string>
 #include <climits>
 #include <cfloat>
+#include <valarray>
 
 // Constructors
 // ====================================================================================================
@@ -149,25 +150,65 @@ TSPResult Data::triangular() {
 
 // ====================================================================================================
 
-TSPResult Data::heuristic() {
-  TSPResult res = {0, {}};
-  Vertex<Info> &v = g.findVertex(START_VERTEX);
+#define DEFAULT_PHEROMONE 0.1
+#define ALPHA 0.9
+#define BETA 1.5
+#define ITERATIONS 100
 
-  while (res.path.size() < g.getNumVertex()) {
-    auto possibleEdges = generatePossibleEdges(g, v, res.path);
-    auto edge = std::min_element(possibleEdges.begin(), possibleEdges.end(),
-                                 [](const Edge<Info> &a, const Edge<Info> &b) {
-                                   return a.getWeight() < b.getWeight();
-                                 });
-    if (edge == possibleEdges.end()) break;
-    res.cost += edge->get().getWeight();
-    res.path.push_back(edge->get().getDest());
-    v = g.findVertex(edge->get().getDest());
+void antWalk(Graph<Info> &g, Vertex<Info> &v, std::vector<std::vector<double>> &matrixOfPheromones) {
+  std::vector<uint64_t> path;
+  double cost = 0;
+  path.push_back(v.getId());
+  v.setVisited(true);
+  for (int _ = 0; _ < g.getNumVertex() - 1; _++) {
+    std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges = generatePossibleEdges(g, v, path);
+    double sum = 0;
+    for (const auto &e: possibleEdges) {
+      sum += pow(matrixOfPheromones[v.getId()][e.get().getDest()], ALPHA) * pow(1 / e.get().getWeight(), BETA);
+    }
+    double r = (double) rand() / RAND_MAX;
+    double partialSum = 0;
+    for (const auto &e: possibleEdges) {
+      double probability = (pow(matrixOfPheromones[v.getId()][e.get().getDest()], ALPHA) * pow(1 / e.get().getWeight(), BETA)) / sum;
+      partialSum += probability;
+      if (r <= partialSum) {
+        cost += e.get().getWeight();
+        path.push_back(e.get().getDest());
+        v = g.findVertex(e.get().getDest());
+        v.setVisited(true);
+        break;
+      }
+    }
   }
+  for (auto &vertex: g.getVertexSet()) {
+    vertex.second.setVisited(false);
+  }
+}
 
-  res.cost += g.findVertex(res.path.back()).getAdj().at(START_VERTEX).getWeight();
-  res.path.insert(res.path.begin(), START_VERTEX);
-  return res;
+TSPResult dfsPheromones(Graph<Info> &g, Vertex<Info> &v, std::vector<std::vector<double>> &matrixOfPheromones) {
+  TSPResult bestResult = {DBL_MAX, {}};
+  for (int _ = 0; _ < ITERATIONS; _++) {
+    antWalk(g, v, matrixOfPheromones);
+    TSPResult result = {0, {}};
+    for (int i = 0; i < g.getNumVertex(); i++) {
+      for (int j = 0; j < g.getNumVertex(); j++) {
+        if (matrixOfPheromones[i][j] != DEFAULT_PHEROMONE) {
+          result.cost += Utils::weight(i, j, g);
+          result.path.push_back(i);
+        }
+      }
+    }
+    if (result < bestResult) bestResult = result;
+  }
+  return bestResult;
+}
+
+TSPResult Data::heuristic() {
+  Vertex<Info> &v = g.findVertex(START_VERTEX);
+  auto matrixOfPheromones = std::vector<std::vector<double>>(g.getNumVertex(), std::vector<double>(g.getNumVertex(), DEFAULT_PHEROMONE));
+  for (auto& [_, vertex]: g.getVertexSet()) vertex.setVisited(false);
+  for (int _ = 0; _ < 100; _++) antWalk(g, v, matrixOfPheromones);
+  return dfsPheromones(g, v, matrixOfPheromones);
 }
 
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {

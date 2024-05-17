@@ -168,8 +168,8 @@ public:
     else return findVertex(id);
   }
 
-  [[nodiscard]] Edge<T> &findEdge(uint64_t orig, uint64_t dest) {
-    try { return vertexSet.at(orig).getAdj().at(dest); }
+  [[nodiscard]] Edge<T> *findEdge(uint64_t orig, uint64_t dest) {
+    try { return &vertexSet.at(orig).getAdj().at(dest); }
     catch (std::out_of_range &e) { return nullptr; }
   }
 
