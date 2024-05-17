@@ -156,10 +156,10 @@ public:
     using parsum::string_p;
     return parsum::map(
             parsum::ws0() >> string_p("disconnected") >> parsum::ws1() >>
-            CommandLineValue::parse_int() >> parsum::ws0(),
+            CommandLineValue::parse_int() >> parsum::ws1() >> CommandLineValue::parse_int() >> parsum::ws0(),
             [](auto inp) {
-              auto [a, b, c, val, d] = inp;
-              return Command(Command::Disconnected, {val}); });
+              auto [a, b, c, val, d, iter, e] = inp;
+              return Command(Command::Disconnected, {val, iter}); });
   }
 
   static consteval auto parse_cmd() {

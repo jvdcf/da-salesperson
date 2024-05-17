@@ -208,7 +208,6 @@ TSPResult Data::heuristic() {
 #define EXPLORATION_CONSTANT 0.0001
 #define HYPERPARAMETER 0.1
 #define DEGREDACTION_RATE 0.1
-#define ITERATIONS 100
 #define DEFAULT_PHEROMONE 0.1
 
 void updatePheromoneLevels(Graph<Info> &g, TSPResult &result) {
@@ -249,17 +248,10 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
       probabilities.push_back(probability);
     }
 
-    if (possibleEdges.empty()) {
+    if (possibleEdges.empty()) { // No possible edges
       updatePheromoneLevels(g, result);
       return {DBL_MAX, result.path};
-    } // No possible edges
-
-    // Print probabilities: DEBUG
-    /*std::cout << "Probabilities for Vertex " << currentId << " : ";
-    for (int i = 0; i < probabilities.size(); ++i) {
-      std::cout << "[" << possibleEdges[i].get().getDest() << "] " << probabilities[i] << " ";
     }
-    std::cout << std::endl;*/
 
     // Select edge
     auto& edgeSelected = Utils::weightedRandomElement(possibleEdges, probabilities).get();
@@ -272,7 +264,7 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
   return result;
 }
 
-std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
+std::optional<TSPResult> Data::disconnected(uint64_t vertexId, unsigned iterations) {
   // Set default values
   for (auto& [_, v]: g.getVertexSet()) {
     v.setVisited(false);
@@ -282,9 +274,9 @@ std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
 
   Vertex<Info> &v = g.findVertex(vertexId);
   TSPResult bestResult = {DBL_MAX, {}};
-  for (int _ = 0; _ < ITERATIONS; ++_) {
+  for (int i = 0; i < iterations; ++i) {
     TSPResult res = traverseGraphUsingAnts(g, v);
-    std::cout << "Iteration " << _ << " : " << res.cost;
+    std::cout << "Iteration " << i << " : " << res.cost;
     if (res < bestResult) {
       bestResult = res;
       std::cout << " [*]";
@@ -293,5 +285,6 @@ std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
     std::cout.flush();
   }
 
+  if (bestResult.cost == DBL_MAX) return {};
   return bestResult;
 }
