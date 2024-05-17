@@ -5,6 +5,7 @@
 #include <cstdint>
 #include <utility>
 #include <chrono>
+#include <random>
 #include "data/Info.h"
 #include "data/Graph.hpp"
 
@@ -22,6 +23,13 @@ public:
   static double convertToRadians(double angle);
   static double haversineDistance(double lat1, double lon1, double lat2, double lon2);
 
+  template<class T> static T weightedRandomElement(const std::vector<T> &v, const std::vector<double> &weights){
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::discrete_distribution<> d(weights.begin(), weights.end());
+    return v[d(gen)];
+  }
+
   static void prim(Graph<Info> *g);
 
   static std::vector<uint64_t> MSTdfs(Graph<Info> *g);
@@ -33,8 +41,6 @@ public:
   static void dfs(Vertex<Info> *v, Graph<Info> * );
 
   static double weight(uint64_t v, uint64_t u, Graph<Info> *g);
-
-
 };
 
 

@@ -70,7 +70,7 @@ public:
   TSPResult backtracking();
   TSPResult triangular();
   TSPResult heuristic();
-  std::optional<TSPResult> disconnected(uint64_t vertexId);
+  std::optional<TSPResult> disconnected(uint64_t vertexId, unsigned iterations);
 };
 
 #endif // DA2324_PRJ1_G163_DATA_H
