@@ -154,24 +154,24 @@ TSPResult Data::triangular() {
 
   // Calculate the cost and the path
   double totalCost = 0;
-  std::vector<Info> path;
+  std::vector<uint64_t> path;
 
   for (int i=0; i<dfs.size()-1; i++){
     double cost = Utils::weight(dfs[i], dfs[i+1], &g);
     totalCost += cost;
-    path.push_back(g.findVertex(dfs[i]).getInfo());
+    path.push_back(dfs[i]);
   }
 
   // Add last vertex to path
-  path.push_back(g.findVertex(dfs[dfs.size()-1]).getInfo());
+  path.push_back(dfs[dfs.size()-1]);
 
   // Deal with the last edge (returning to the beginning)
   totalCost +=  Utils::weight(dfs[dfs.size()-1], dfs[0], &g);
 
   // Add the first vertex to the end of the path
-  path.push_back(g.findVertex(dfs[0]).getInfo());
+  path.push_back(dfs[0]);
 
-  return TSPResult{path, totalCost};
+  return TSPResult{totalCost, path};
 }
 
 double calc_weight(Graph<Info> &root, uint64_t src, uint64_t dst) {
