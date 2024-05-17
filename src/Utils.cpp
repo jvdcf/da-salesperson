@@ -96,16 +96,15 @@ double Utils::haversineDistance(double lat1, double lon1, double lat2, double lo
 
   return R * c;
 }
+void Utils::prim(Graph<Info> & g) {
 
-void Utils::prim(Graph<Info> * g) {
-
-  for (auto& [id, v] : g->getVertexSet()){
+  for (auto& [id, v] : g.getVertexSet()){
     v.setVisited(false);
     v.setDist(INF);
     v.setPath(UINT64_MAX);
   }
 
-  Vertex<Info>& vertex= g->findVertex(0); //start with vertex 0
+  Vertex<Info>& vertex= g.findVertex(0); //start with vertex 0
   vertex.setDist(0);
 
   MutablePriorityQueue<Vertex<Info>> q;
@@ -117,7 +116,7 @@ void Utils::prim(Graph<Info> * g) {
     v->setVisited(true);
 
     for (auto& [destId, e] : v->getAdj()){
-      Vertex<Info>& u = g->findVertex(destId);
+      Vertex<Info>& u = g.findVertex(destId);
 
       if (!u.isVisited() && e.getWeight() < u.getDist()) {
 
@@ -135,29 +134,29 @@ void Utils::prim(Graph<Info> * g) {
 
 }
 
-std::vector<uint64_t> Utils::MSTdfs(Graph<Info> * g){
+std::vector<uint64_t> Utils::MSTdfs(Graph<Info> & g){
   std::vector<uint64_t> res;
-  for (auto& [id, v]  : g->getVertexSet())
+  for (auto& [id, v]  : g.getVertexSet())
     v.setVisited(false);
 
-  Vertex<Info>& first = g->findVertex(0);
+  Vertex<Info>& first = g.findVertex(0);
 
   MSTdfsVisit(first, res, g);
 
-  for (auto& [id, v]  : g->getVertexSet())
+  for (auto& [id, v]  : g.getVertexSet())
     if (!v.isVisited())
       MSTdfsVisit(v, res, g);
 
   return res;
 }
 
-void Utils::MSTdfsVisit(Vertex<Info>& v, std::vector<uint64_t> & res, Graph<Info> * g) {
+void Utils::MSTdfsVisit(Vertex<Info>& v, std::vector<uint64_t> & res, Graph<Info> & g) {
   v.setVisited(true);
 
   res.push_back(v.getId());
 
   for (auto& [destId, e] : v.getAdj()) {
-    Vertex<Info>& u = g->findVertex(destId);
+    Vertex<Info>& u = g.findVertex(destId);
 
     if (u.getPath()){
       if (u.getPath() == v.getId()) {
@@ -169,38 +168,9 @@ void Utils::MSTdfsVisit(Vertex<Info>& v, std::vector<uint64_t> & res, Graph<Info
   }
 }
 
-double Utils::weight(uint64_t v, uint64_t u, Graph<Info> * g) {
-  Edge<Info>* e =g->findEdge(v, u);
+double Utils::weight(uint64_t v, uint64_t u, Graph<Info> & g) {
+  Edge<Info>* e =g.findEdge(v, u);
 
   if (e) return e->getWeight();
-  return g->findVertex(v).getInfo().distance(g->findVertex(u).getInfo());
+  return g.findVertex(v).getInfo().distance(g.findVertex(u).getInfo());
 }
-
-
-bool Utils::isConnected(Graph<Info> *g) {
-
-  for (auto& [id, v] : g->getVertexSet())
-    v.setVisited(false);
-
-  Vertex<Info> first = g->getVertexSet().at(0);
-
-  dfs(&first, g);
-
-  for (auto& [id, v] : g->getVertexSet())
-    if (!v.isVisited())
-      return false;
-
-  return true;
-}
-
-void Utils::dfs(Vertex<Info> *v, Graph<Info> * g) {
-  v->setVisited(true);
-
-  for (auto& [destId, e] : v->getAdj()) {
-    Vertex<Info>& u = g->findVertex(destId);
-    if (!u.isVisited())
-      dfs(&u, g);
-  }
-}
-
-
