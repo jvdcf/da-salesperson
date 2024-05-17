@@ -7,9 +7,7 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <utility>
-#include <climits>
-#include <cfloat>
+#include <cmath>
 
 // Constructors
 // ====================================================================================================
@@ -203,8 +201,77 @@ TSPResult Data::heuristic() {
   return heuristic_impl(this->g);
 }
 
+// ====================================================================================================
+
+#define ALPHA 0.9
+#define BETA 1.5
+#define EXPLORATION_CONSTANT 0.0001
+#define HYPERPARAMETER 0.1
+#define DEGREDACTION_RATE 0.1
+#define ITERATIONS 100
+#define DEFAULT_PHEROMONE 0.1
+
+TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &v) {
+  for (auto& [_, i]: g.getVertexSet()) i.setVisited(false);
+  TSPResult result = {0, {v.getId()}};
+  Vertex<Info> &current = v;
+
+  // Loop through all vertices
+  for (int steps = 0; steps < g.getNumVertex() - 1; ++steps) {
+    current.setVisited(true);
+    std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges;
+    std::vector<double> probabilities;
+
+    // Calculate probabilities for each edge
+    for (const auto &[dest, e]: current.getAdj()) {
+      // Ignore unwanted edges
+      if (g.findVertex(dest).isVisited()) {
+        if (dest == START_VERTEX && steps == g.getNumVertex() - 1) {
+          possibleEdges.push_back(std::ref(e));
+          probabilities.push_back(1);
+          break;
+        } else continue;
+      }
+
+      // Calculate probability
+      double pheromoneLevel = fmax(e.getFlow(), EXPLORATION_CONSTANT);
+      double probability = pow(pheromoneLevel, ALPHA) / pow(e.getWeight(), BETA);
+      possibleEdges.push_back(std::ref(e));
+      probabilities.push_back(probability);
+    }
+
+    // Select edge
+    auto& edgeSelected = Utils::weightedRandomElement(possibleEdges, probabilities).get();
+    v = g.findVertex(edgeSelected.getDest());
+    result.cost += edgeSelected.getWeight();
+    result.path.push_back(v.getId());
+  }
+
+  // Update pheromone levels
+  double pheromone = HYPERPARAMETER / result.cost * DEGREDACTION_RATE;
+  for (int i = 0; i < result.path.size() - 1; ++i) {
+    Edge<Info> *e = g.findEdge(result.path[i], result.path[i + 1]);
+    e->setFlow(e->getFlow() + pheromone);
+  }
+
+  return result;
+}
+
 std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
-  // TODO
-  error("Not yet implemented");
-  return {};
+  // Set default values
+  for (auto& [_, v]: g.getVertexSet()) {
+    v.setVisited(false);
+    for (auto& [_, e]: v.getAdj())
+      e.setFlow(DEFAULT_PHEROMONE);
+  }
+
+  Vertex<Info> &v = g.findVertex(vertexId);
+  TSPResult bestResult = {DBL_MAX, {}};
+  for (int _ = 0; _ < ITERATIONS; ++_) {
+    TSPResult res = traverseGraphUsingAnts(g, v);
+    std::cout << "Iteration " << _ << " : " << res << std::endl;
+    if (res < bestResult) bestResult = res;
+  }
+
+  return bestResult;
 }

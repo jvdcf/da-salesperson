@@ -4,6 +4,7 @@
 #include <string>
 #include <fstream>
 #include <algorithm>
+#include <random>
 #include "Utils.h"
 
 // Colors class ================================================================
