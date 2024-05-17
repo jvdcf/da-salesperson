@@ -213,7 +213,6 @@ TSPResult Data::heuristic() {
 
 void updatePheromoneLevels(Graph<Info> &g, TSPResult &result) {
   double pheromone = HYPERPARAMETER / result.cost * DEGREDACTION_RATE;
-  std::cout << "Pheromone: " << pheromone << std::endl;
   for (int i = 0; i < result.path.size() - 1; ++i) {
     Edge<Info> *e = g.findEdge(result.path[i], result.path[i + 1]);
     e->setFlow(e->getFlow() + pheromone);
@@ -288,9 +287,10 @@ std::optional<TSPResult> Data::disconnected(uint64_t vertexId) {
     std::cout << "Iteration " << _ << " : " << res.cost;
     if (res < bestResult) {
       bestResult = res;
-      std::cout << " [!]";
+      std::cout << " [*]";
     }
-    std::cout << std::endl;
+    std::cout << "               \r";
+    std::cout.flush();
   }
 
   return bestResult;
