@@ -7,11 +7,12 @@
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <sys/types.h>
 #include <utility>
+#include <climits>
+#include <cfloat>
 
 // Constructors
-// =================================================================================================
+// ====================================================================================================
 
 std::istringstream Data::prepareCsv(const std::string &path) {
   std::ifstream file(path, std::ios::in | std::ios::binary);
@@ -85,11 +86,64 @@ Graph<Info> &Data::getGraph() { return g; }
 // Functions
 // ====================================================================================================
 
-TSPResult Data::backtracking() {
-  // TODO
-  error("Not yet implemented");
-  return {};
+std::vector<std::reference_wrapper<const Edge<Info>>>
+generatePossibleEdges(Graph<Info> &g, Vertex<Info> &v, const std::vector<uint64_t> &path) {
+  std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges;
+  if (path.size() == g.getNumVertex() - 1) {  // If all vertices have been visited, add edge to start
+    for (const auto &e: v.getAdj()) {
+      if (e.first == START_VERTEX) {
+        possibleEdges.push_back(std::ref(e.second));
+        break;
+      }
+    }
+  } else {
+    for (const auto &e: v.getAdj()) { // Add all edges that their destination vertex hasn't been visited yet
+      if (e.first == START_VERTEX) continue;
+      if (std::find(path.begin(), path.end(), e.first) != path.end()) continue;
+      possibleEdges.push_back(std::ref(e.second));
+    }
+  }
+  return possibleEdges;
 }
+
+TSPResult btDFS(Graph<Info> &g, const TSPResult &p, Vertex<Info> &v, double &bestCost) {
+  auto possibleEdges = generatePossibleEdges(g, v, p.path);
+  TSPResult bestResult = {DBL_MAX, {}};
+
+  // Base cases
+  if (p.path.size() == g.getNumVertex()) {
+    if (p.cost < bestCost) bestCost = p.cost;
+    return {p.cost, p.path};    // Hamiltonian cycle complete
+  }
+
+  // Bounding
+  if (p.cost >= bestCost) return bestResult;
+
+  // Generate results and pick the best one
+  for (std::reference_wrapper<const Edge<Info>> e: possibleEdges) {
+    double nextCost = p.cost + e.get().getWeight();
+    auto nextPath = p.path;
+    Vertex<Info> &nextVertex = g.findVertex(e.get().getDest());
+    nextPath.push_back(nextVertex.getId());
+    TSPResult next = {nextCost, nextPath};
+    auto result = btDFS(g, next, nextVertex, bestCost);
+    if (result < bestResult) bestResult = result;
+  }
+
+  return bestResult;
+}
+
+TSPResult Data::backtracking() {
+  Vertex<Info> &start = g.findVertex(START_VERTEX);
+  TSPResult p = {0, {}};
+  auto bestCost = DBL_MAX;
+
+  TSPResult res = btDFS(g, p, start, bestCost);
+  res.path.insert(res.path.begin(), START_VERTEX);
+  return res;
+}
+
+// ====================================================================================================
 
 TSPResult Data::triangular() {
   // TODO
