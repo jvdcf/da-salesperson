@@ -116,8 +116,9 @@ inline std::string into(std::tuple<char, char, std::string> const &val) {
 // INTO end
 
 // ParseError
-/// Constexpr struct that contains an error message, level of error, and
-/// position.
+/**
+ * @brief Type that represents the Error state of a parser
+ */
 struct ParseError {
 public:
   /// Level of error.
@@ -181,7 +182,8 @@ private:
 // ParseError end
 
 /**
- *
+ * @brief Type that represents the result of an operations: either succsess or
+ * error.
  *
  */
 template <typename T, typename E> struct Result {
@@ -226,6 +228,9 @@ consteval auto map(P const &parser, F const &fn);
 
 template <typename P, typename F, typename Res> struct Map;
 
+/**
+ * @brief Type that represents an action (Functor) of parsing
+ */
 template <typename Derived, typename Out> struct Parser {
   typedef Out value_type;
   constexpr auto to_fn() const {
@@ -236,6 +241,10 @@ template <typename Derived, typename Out> struct Parser {
   }
 };
 
+/**
+ * @brief Type that derives from parser and verifies if a char matches a
+ * predicate
+ */
 template <typename Fn> struct VerifyP : public Parser<VerifyP<Fn>, char> {
   Fn fn;
   using Parser<VerifyP<Fn>, char>::Parser;
@@ -258,7 +267,9 @@ template <typename Fn> struct VerifyP : public Parser<VerifyP<Fn>, char> {
     };
   }
 };
-
+/**
+ * @brief Type that represents applying a parser after applying another
+ */
 template <typename P1, typename P2,
           typename Out =
               decltype(join_tup(std::declval<typename P1::value_type>(),
@@ -289,6 +300,9 @@ struct Sequence : public Parser<Sequence<P1, P2>, Out> {
   }
 };
 
+/**
+ * @brief Type that represents applying either one parser or another
+ */
 template <typename P1, typename P2, typename Out = typename P2::value_type>
 struct Alternative : public Parser<Alternative<P1, P2>, Out> {
   using Parser<Alternative<P1, P2>, Out>::Parser;
@@ -322,6 +336,10 @@ struct Alternative : public Parser<Alternative<P1, P2>, Out> {
   }
 };
 
+/**
+ * @brief Type that represents applying a predicate to a successful result of a
+ * parser
+ */
 template <typename P, typename F,
           typename Out = std::invoke_result_t<F, typename P::value_type>>
 struct Map : public Parser<Map<P, F>, Out> {
@@ -351,6 +369,11 @@ struct Map : public Parser<Map<P, F>, Out> {
     };
   }
 };
+
+/**
+ * @brief Type that represents applying a predicate to a failed result of a
+ * parser
+ */
 template <typename P, typename F,
           typename Err = std::invoke_result_t<F, ParseError>>
 struct Context : public Parser<Context<P, F>, typename P::value_type> {
@@ -380,6 +403,9 @@ struct Context : public Parser<Context<P, F>, typename P::value_type> {
   }
 };
 
+/**
+ * @brief Type that represents parsing at least once
+ */
 template <typename P, typename Out> struct Many1 : Parser<Many1<P, Out>, Out> {
   using Parser<Many1<P, Out>, Out>::Parser;
 
@@ -416,6 +442,9 @@ template <typename P, typename Out> struct Many1 : Parser<Many1<P, Out>, Out> {
   }
 };
 
+/**
+ * @brief Type that doesn't parse the input, but returns something regardless
+ */
 template <typename F>
 struct Const : public Parser<Const<F>, typename std::invoke_result_t<F>> {
   using Out = typename std::invoke_result_t<F>;
@@ -431,6 +460,9 @@ struct Const : public Parser<Const<F>, typename std::invoke_result_t<F>> {
   }
 };
 
+/**
+ * @brief Type that promotes a parsing error into a critical one
+ */
 template <typename P, typename Out = typename P::value_type>
 struct Cut : public Parser<Cut<P, Out>, Out> {
   const P p;
@@ -448,6 +480,10 @@ struct Cut : public Parser<Cut<P, Out>, Out> {
   }
 };
 
+/**
+ * @brief Type that peeks the input for parsing an internal parser, without
+ * consuming input
+ */
 template <typename P> struct Peek : public Parser<Peek<P>, std::tuple<>> {
   const P p;
   constexpr Peek(P const &p) : p(p) {};
@@ -466,6 +502,9 @@ template <typename P> struct Peek : public Parser<Peek<P>, std::tuple<>> {
   }
 };
 
+/**
+ * @brief Type that represents indescriminately taking n chars from an input
+ */
 struct Take : public Parser<Take, std::string> {
   const uint32_t cnt;
   constexpr Take(uint32_t const &cnt) : cnt(cnt) {};
@@ -491,75 +530,125 @@ struct Take : public Parser<Take, std::string> {
   }
 };
 
+/**
+ * @brief Wrapper over Const
+ */
 template <typename Res> consteval auto constant(Res const &res) {
   auto lambda = [res]() { return res; };
   return Const<decltype(lambda)>{lambda};
 }
 
+/**
+ * @brief Wrapper over Const
+ */
 template <typename Default> consteval auto constant() {
   auto lambda = []() { return Default{}; };
   return Const<decltype(lambda)>{lambda};
 }
 
+/**
+ * @brief Wrapper over Sequence
+ */
 template <typename P1, typename P2>
 consteval auto operator>>(P1 const &p1, P2 const &p2) {
   return Sequence(p1, p2);
 }
 
+/**
+ * @brief Wrapper over Map
+ */
 template <typename P1, typename F>
 consteval auto map(P1 const &p1, F const &f) {
   return Map(p1, f);
 }
 
+/**
+ * @brief Wrapper over Context
+ */
 template <typename P, typename F>
 consteval auto context(P const &p, F const &f) {
   return Context(p, f);
 }
 
+/**
+ * @brief Wrapper over VerifyP
+ */
 template <typename F> consteval auto verify(F const &fun) {
   return VerifyP(fun);
 }
 
+/**
+ * @brief Parses a char if it matches the provided char
+ */
 template <typename Out = char> consteval auto char_p(char tgt) {
   return map(verify([tgt](char const &val) { return val == tgt; }),
              [](char res) -> Out { return {res}; });
 }
 
+/**
+ * @brief Sequence operator that also performs add internally
+ */
 template <typename P1, typename P2>
 consteval auto operator+(P1 const &p1, P2 const &p2) {
   return map(Sequence{p1, p2},
              [](auto tup) { return std::get<0>(tup) + std::get<1>(tup); });
 }
 
+/**
+ * @brief Wrapper over Alternative
+ */
 template <typename P1, typename P2>
 consteval auto operator|(P1 const &p1, P2 const &p2) {
   return Alternative{p1, p2};
 }
 
+/**
+ * @brief Wrapper over Many1
+ */
 template <typename P, typename Out = typename P::value_type>
 consteval auto many1(P const &parser) {
   return Many1<P, Out>{parser};
 }
 
+/**
+ * @brief Parses multiple times, without a minimum amount
+ */
 template <typename P, typename Out>
 consteval auto many0(P const &parser, Out const &default_value) {
   return many1(parser) | constant(default_value);
 }
 
+/**
+ * @brief Parses multiple times, without a minimum amount
+ */
 template <typename P> consteval auto many0(P const &parser) {
   return many1(parser) | constant<typename P::value_type>();
 }
 
+/** @brief Optionally parses the input
+ */
 template <typename P> consteval auto maybe(P const &p) {
   return p | constant<typename P::value_type>();
 }
 
+/**
+ * @brief Wrapper over Cut
+ */
 template <typename P> consteval auto cut(P const &p) { return Cut<P>(p); }
 
+/**
+ * @brief Wrapper over Peek
+ */
 template <typename P> consteval auto peek(P const &p) { return Peek<P>(p); }
 
+/**
+ * @brief Wrapper over Take
+ */
 consteval auto take(uint32_t const &cnt) { return Take(cnt); }
 
+/**
+ * @brief Matches and parses string
+ */
 consteval auto string_p(std::string_view const &inp) {
   return map(take(inp.size()), [inp](auto s) {
     if (s == inp) {
@@ -570,51 +659,122 @@ consteval auto string_p(std::string_view const &inp) {
   });
 }
 
+/**
+ * @brief Function that wraps a method to transform a parser into a function
+ */
 template <typename Pars> consteval auto parse_fn(Pars const &parser) {
   return parser.to_fn();
 }
 
+/**
+ * @brief Function that checks if a char is a digit
+ */
 constexpr bool is_digit(char const &c) { return std::isdigit(c); }
+
+/**
+ * @brief Function that checks if a char is alphabetic
+ */
 constexpr bool is_alpha(char const &c) { return std::isalpha(c); }
+
+/**
+ * @brief Function that checks if a char is alphanumeric
+ */
 constexpr bool is_alphanumeric(char const &c) { return std::isalnum(c); }
+
+/**
+ * @brief Function that checks if a char is whitespace
+ */
 constexpr bool is_whitespace(char const &c) { return std::isspace(c); }
+
+/**
+ * @brief Function that checks if a char is a hexadecimal digit
+ */
 constexpr bool is_hex_digit(char const &c) {
   return ('0' <= c && '9' >= 'c') || ('A' <= c && 'F' >= c) ||
          ('a' <= c && 'f' >= c);
 }
 
+/**
+ * @brief Parses a single digit
+ */
 consteval auto digit() {
   return map(verify(&is_digit), [](char const &c) { return std::string{c}; });
 }
 
+/**
+ * @brief Parses one or more digits
+ */
 consteval auto digits1() { return many1(digit()); }
+
+/**
+ * @brief Parses zero or more digits
+ */
 consteval auto digits0() { return many0(digit()); }
 
+/**
+ * @brief Parses a single alphabetic
+ */
 consteval auto alphabetic() {
   return map(verify(&is_alpha), [](char const &c) { return std::string{c}; });
 }
+
+/**
+ * @brief Parses a one or more alphabetics
+ */
 consteval auto alphabetics1() { return many1(alphabetic()); }
+
+/**
+ * @brief Parses a zero or more alphabetics
+ */
 consteval auto alphabetics0() { return many0(alphabetic()); }
 
+/**
+ * @brief Parses a single alphanumeric
+ */
 consteval auto alphanumeric() {
   return map(verify(&is_alphanumeric),
              [](char const &c) { return std::string{c}; });
 }
+
+/**
+ * @brief Parses a one or more alphanumerics
+ */
 consteval auto alphanumerics1() { return many1(alphanumeric()); }
+
+/**
+ * @brief Parses a zero or more alphanumerics
+ */
 consteval auto alphanumerics0() { return many0(alphanumeric()); }
 
+/**
+ * @brief Parses a single hex digit
+ */
 consteval auto hex_digit() {
   return map(verify(&is_hex_digit),
              [](char const &c) { return std::string{c}; });
 }
 
+/**
+ * @brief Parses a one or more hex digits
+ */
 consteval auto hex_digits1() { return many1(hex_digit()); }
+
+/**
+ * @brief Parses a zero or more hex digits
+ */
 consteval auto hex_digits0() { return many0(hex_digit()); }
 
+/**
+ * @brief Parses a zero or more whitespace
+ */
 consteval auto ws0() {
   return many0(
       map(verify(&is_whitespace), [](auto c) { return std::string{c}; }));
 }
+
+/**
+ * @brief Parses a one or more whitespace
+ */
 consteval auto ws1() {
   return many1(
       map(verify(&is_whitespace), [](auto c) { return std::string{c}; }));
