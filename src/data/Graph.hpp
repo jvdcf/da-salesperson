@@ -14,14 +14,23 @@
 #include <optional>
 #include <stdexcept>
 #include <unordered_map>
+#include "../../lib/MutablePriorityQueue.h"
 
-template <typename T> class Graph;
-template <typename T> class Vertex;
-template <typename T> class Edge;
+#define INF std::numeric_limits<double>::max()
+
+template<typename T>
+class Graph;
+
+template<typename T>
+class Vertex;
+
+template<typename T>
+class Edge;
 
 // =================================================================================================
 
-template <typename T> class Edge {
+template<typename T>
+class Edge {
 private:
   uint64_t orig; /// Origin vertex id
   uint64_t dest; /// Destination vertex id
@@ -35,7 +44,7 @@ public:
   Edge() = default;
 
   Edge(uint64_t orig, uint64_t dest, double weight)
-      : orig(orig), dest(dest), weight(weight) {}
+          : orig(orig), dest(dest), weight(weight) {}
 
   [[nodiscard]] uint64_t getOrig() const { return orig; }
 
@@ -45,18 +54,15 @@ public:
 
   [[nodiscard]] double getFlow() const { return flow; }
 
-  [[nodiscard]] bool isSelected() const { return selected; }
-
   void setWeight(double w) { this->weight = w; }
 
   void setFlow(double f) { this->flow = f; }
-
-  void setSelected(bool s) { this->selected = s; }
 };
 
 // =================================================================================================
 
-template <typename T> class Vertex {
+template<typename T>
+class Vertex {
   friend class Graph<T>;
 
 private:
@@ -94,6 +100,11 @@ public:
     return *this;
   }
 
+  // Required by MutablePriorityQueue
+  bool operator<(Vertex<T> &vertex) const {
+    return this->dist < vertex.dist;
+  }
+
   [[nodiscard]] T getInfo() const { return info; }
 
   [[nodiscard]] uint64_t getId() const { return id; }
@@ -108,7 +119,7 @@ public:
 
   [[nodiscard]] double getDist() const { return dist; }
 
-  [[nodiscard]] Edge<T> &getPath() const { return path; }
+  [[nodiscard]] uint64_t getPath() const { return path; }
 
   void setVisited(bool v) { this->visited = v; }
 
@@ -116,12 +127,15 @@ public:
 
   void setDist(double d) { this->dist = d; }
 
-  void setPath(Edge<T> &p) { this->path = p; }
+  void setPath(uint64_t p) { this->path = p; }
+
+  friend class MutablePriorityQueue<Vertex>;
 };
 
 // =================================================================================================
 
-template <typename T> class Graph {
+template<typename T>
+class Graph {
 private:
   std::unordered_map<uint64_t, Vertex<T>> vertexSet;
 
@@ -172,7 +186,7 @@ public:
 
   [[nodiscard]] Edge<T> *findEdge(uint64_t orig, uint64_t dest) {
     std::unordered_map<uint64_t, Edge<T>> &edgs =
-        this->vertexSet.at(orig).getAdj();
+            this->vertexSet.at(orig).getAdj();
     if (auto itr = edgs.find(dest); itr != edgs.end()) {
       return &(itr->second);
     }
@@ -181,5 +195,6 @@ public:
 
   int getNumVertex() { return vertexSet.size(); }
 };
+
 
 #endif // DA2324_PRJ2_G163_GRAPH_HPP

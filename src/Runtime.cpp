@@ -45,7 +45,7 @@ void Runtime::printHelp() {
             << keyword << "  heuristic\n"
             << comment << "      Generates an approximation of the TSP problem using // TODO.\n"
             << comment << "      If the graph is not complete, this command will generate the remaining edges using the coordinates inside nodes.csv.\n"
-            << keyword << "  disconnected <vertex-id>\n"
+            << keyword << "  disconnected <vertex-id> <iterations>\n"
             << comment << "      Generates an approximation of the TSP problem using // TODO.\n"
             << comment << "      This command will not assume any edge not given by the .csv files.\n"
             << Color::clear() << std::endl;
@@ -59,7 +59,7 @@ void Runtime::handleQuit() {
 void Runtime::handleCount() {
   auto &g = data->getGraph();
   unsigned int edgeCount = 0;
-  for (auto v : g.getVertexSet()) {
+  for (auto v: g.getVertexSet()) {
     edgeCount += v.second.getAdj().size();
   }
   std::cout << "Number of vertices: " << g.getVertexSet().size() << std::endl;
@@ -80,12 +80,13 @@ void Runtime::handleHeuristic() {
 
 void Runtime::handleDisconnected(Command &cmd) {
   unsigned vertexId = cmd.args.at(0).getInt().value();
+  unsigned iterations = cmd.args.at(1).getInt().value();
   Graph<Info> &g = data->getGraph();
   if (!g.hasVertex(vertexId)) {
     error("Vertex " + std::to_string(vertexId) + " does not exist.");
     return;
   }
-  auto result = data->disconnected(vertexId);
+  auto result = data->disconnected(vertexId, iterations);
   if (!result.has_value()) {
     info("No hamiltonian path starting at vertex " + std::to_string(vertexId) + " was found.");
   } else {
@@ -112,27 +113,27 @@ void Runtime::processArgs(std::istream &args) {
 
   clock.start();
   switch (cmd.command) {
-  case Command::Help:
-    return printHelp();
-  case Command::Quit:
-    return handleQuit();
-  case Command::Count:
-    return handleCount();
-  case Command::Backtracking:
-    handleBacktracking();
-    break;
-  case Command::Triangular:
-    handleTriangular();
-    break;
-  case Command::Heuristic:
-    handleHeuristic();
-    break;
-  case Command::Disconnected:
-    handleDisconnected(cmd);
-    break;
-  default:
-    info("Type 'help' to see the available commands.");
-    return;
+    case Command::Help:
+      return printHelp();
+    case Command::Quit:
+      return handleQuit();
+    case Command::Count:
+      return handleCount();
+    case Command::Backtracking:
+      handleBacktracking();
+      break;
+    case Command::Triangular:
+      handleTriangular();
+      break;
+    case Command::Heuristic:
+      handleHeuristic();
+      break;
+    case Command::Disconnected:
+      handleDisconnected(cmd);
+      break;
+    default:
+      info("Type 'help' to see the available commands.");
+      return;
   }
   clock.stop();
   std::cout << Color(183, 189, 248).foreground() << "Time elapsed: " << clock << Color::clear() << std::endl;
