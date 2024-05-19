@@ -5,19 +5,18 @@
  */
 
 #include <filesystem>
-#include <fstream>
 #include <iostream>
 
-#include "src/CSV.hpp"
-#include "src/Parsum.hpp"
 #include "src/Runtime.h"
 #include "src/Utils.h"
 #include "src/data/Data.h"
 
 void printError() {
   std::cerr << "USAGE: DA2324_PRJ2_G163 <edges.csv> [<nodes.csv>] \n"
-            << "       being <edges.csv> the path to the csv file containing the edges\n"
-            << "       and [<nodes.csv>] an optional path to the csv files about the nodes.\n"
+            << "       being <edges.csv> the path to the csv file containing "
+               "the edges\n"
+            << "       and [<nodes.csv>] an optional path to the csv files "
+               "about the nodes.\n"
             << "See the Doxygen documentation for more information.\n";
   std::exit(1);
 }
@@ -49,14 +48,17 @@ int main(int argc, char **argv) {
     }
     printError();
   }
-  if (!isFile(argv[1])) printError();
+  if (!isFile(argv[1]))
+    printError();
 
-  Clock c; c.start();
+  Clock c;
+  c.start();
   if (argc == 2 || std::string(argv[2]).empty()) {
     Data d(argv[1]);
     startProgram(d, c);
   } else {
-    if (!isFile(argv[2])) printError();
+    if (!isFile(argv[2]))
+      printError();
     Data d(argv[1], argv[2]);
     startProgram(d, c);
   }
