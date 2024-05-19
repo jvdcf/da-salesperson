@@ -2,12 +2,12 @@
 #include "../Utils.h"
 #include "Graph.hpp"
 #include <cfloat>
+#include <cmath>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <string>
-#include <cmath>
 
 // Constructors
 // ====================================================================================================
@@ -60,10 +60,11 @@ void Data::parseCsv(const std::string &path, Graph<Info> &graph,
   uint64_t l = 0;
   while ((res = parser(input)).has_val) {
     std::vector<CsvValues> line = res.ok.get_data();
-    l++;
+    if (l++ % 10000 == 0) {
+      Utils::printLoading(l, num_lines, "Loading " + path);
+    }
     if (!saveFn(line, graph) && l > 1)
       error("Failed to parse line " + std::to_string(l) + " in " + path);
-    Utils::printLoading(l, num_lines, "Loading " + path);
   }
   Utils::clearLine();
 }
@@ -85,47 +86,57 @@ Graph<Info> &Data::getGraph() { return g; }
 // ====================================================================================================
 
 std::vector<std::reference_wrapper<const Edge<Info>>>
-generatePossibleEdges(Graph<Info> &g, Vertex<Info> &v, const std::vector<uint64_t> &path) {
+generatePossibleEdges(Graph<Info> &g, Vertex<Info> &v,
+                      const std::vector<uint64_t> &path) {
   std::vector<std::reference_wrapper<const Edge<Info>>> possibleEdges;
-  if (path.size() == g.getNumVertex() - 1) {  // If all vertices have been visited, add edge to start
-    for (const auto &e: v.getAdj()) {
+  if (path.size() ==
+      g.getNumVertex() -
+          1) { // If all vertices have been visited, add edge to start
+    for (const auto &e : v.getAdj()) {
       if (e.first == START_VERTEX) {
         possibleEdges.push_back(std::ref(e.second));
         break;
       }
     }
   } else {
-    for (const auto &e: v.getAdj()) { // Add all edges that their destination vertex hasn't been visited yet
-      if (e.first == START_VERTEX) continue;
-      if (std::find(path.begin(), path.end(), e.first) != path.end()) continue;
+    for (const auto &e : v.getAdj()) { // Add all edges that their destination
+                                       // vertex hasn't been visited yet
+      if (e.first == START_VERTEX)
+        continue;
+      if (std::find(path.begin(), path.end(), e.first) != path.end())
+        continue;
       possibleEdges.push_back(std::ref(e.second));
     }
   }
   return possibleEdges;
 }
 
-TSPResult btDFS(Graph<Info> &g, const TSPResult &p, Vertex<Info> &v, double &bestCost) {
+TSPResult btDFS(Graph<Info> &g, const TSPResult &p, Vertex<Info> &v,
+                double &bestCost) {
   auto possibleEdges = generatePossibleEdges(g, v, p.path);
   TSPResult bestResult = {DBL_MAX, {}};
 
   // Base cases
   if (p.path.size() == g.getNumVertex()) {
-    if (p.cost < bestCost) bestCost = p.cost;
-    return {p.cost, p.path};    // Hamiltonian cycle complete
+    if (p.cost < bestCost)
+      bestCost = p.cost;
+    return {p.cost, p.path}; // Hamiltonian cycle complete
   }
 
   // Bounding
-  if (p.cost >= bestCost) return bestResult;
+  if (p.cost >= bestCost)
+    return bestResult;
 
   // Generate results and pick the best one
-  for (std::reference_wrapper<const Edge<Info>> e: possibleEdges) {
+  for (std::reference_wrapper<const Edge<Info>> e : possibleEdges) {
     double nextCost = p.cost + e.get().getWeight();
     auto nextPath = p.path;
     Vertex<Info> &nextVertex = g.findVertex(e.get().getDest());
     nextPath.push_back(nextVertex.getId());
     TSPResult next = {nextCost, nextPath};
     auto result = btDFS(g, next, nextVertex, bestCost);
-    if (result < bestResult) bestResult = result;
+    if (result < bestResult)
+      bestResult = result;
   }
 
   return bestResult;
@@ -142,7 +153,6 @@ TSPResult Data::backtracking() {
 }
 
 // ====================================================================================================
-
 
 TSPResult Data::triangular() {
   // Prim's algorithm - Minimum Spanning Tree
@@ -216,9 +226,7 @@ TSPResult heuristic_impl(Graph<Info> &root) {
   return {cost, path};
 }
 
-TSPResult Data::heuristic() {
-  return heuristic_impl(this->g);
-}
+TSPResult Data::heuristic() { return heuristic_impl(this->g); }
 
 // ====================================================================================================
 
@@ -238,7 +246,8 @@ void updatePheromoneLevels(Graph<Info> &g, TSPResult &result) {
 }
 
 TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
-  for (auto &[_, i]: g.getVertexSet()) i.setVisited(false);
+  for (auto &[_, i] : g.getVertexSet())
+    i.setVisited(false);
   TSPResult result = {0, {start.getId()}};
   uint64_t currentId = start.getId();
 
@@ -250,19 +259,21 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
     std::vector<double> probabilities;
 
     // Calculate probabilities for each edge
-    for (const auto &[dest, e]: currentNode.getAdj()) {
+    for (const auto &[dest, e] : currentNode.getAdj()) {
       // Ignore unwanted edges
       if (g.findVertex(dest).isVisited()) {
         if (dest == start.getId() && steps == g.getNumVertex() - 1) {
           possibleEdges.push_back(std::ref(e));
           probabilities.push_back(1);
           break;
-        } else continue;
+        } else
+          continue;
       }
 
       // Calculate probability
       double pheromoneLevel = fmax(e.getFlow(), EXPLORATION_CONSTANT);
-      double probability = pow(pheromoneLevel, ALPHA) / pow(e.getWeight(), BETA);
+      double probability =
+          pow(pheromoneLevel, ALPHA) / pow(e.getWeight(), BETA);
       possibleEdges.push_back(std::ref(e));
       probabilities.push_back(probability);
     }
@@ -273,7 +284,8 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
     }
 
     // Select edge
-    auto &edgeSelected = Utils::weightedRandomElement(possibleEdges, probabilities).get();
+    auto &edgeSelected =
+        Utils::weightedRandomElement(possibleEdges, probabilities).get();
     currentId = edgeSelected.getDest();
     result.cost += edgeSelected.getWeight();
     result.path.push_back(currentId);
@@ -283,11 +295,12 @@ TSPResult traverseGraphUsingAnts(Graph<Info> &g, Vertex<Info> &start) {
   return result;
 }
 
-std::optional<TSPResult> Data::disconnected(uint64_t vertexId, unsigned iterations) {
+std::optional<TSPResult> Data::disconnected(uint64_t vertexId,
+                                            unsigned iterations) {
   // Set default values
-  for (auto &[_, v]: g.getVertexSet()) {
+  for (auto &[_, v] : g.getVertexSet()) {
     v.setVisited(false);
-    for (auto &[_, e]: v.getAdj())
+    for (auto &[_, e] : v.getAdj())
       e.setFlow(DEFAULT_PHEROMONE);
   }
 
@@ -304,6 +317,7 @@ std::optional<TSPResult> Data::disconnected(uint64_t vertexId, unsigned iteratio
     std::cout.flush();
   }
 
-  if (bestResult.cost == DBL_MAX) return {};
+  if (bestResult.cost == DBL_MAX)
+    return {};
   return bestResult;
 }

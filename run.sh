@@ -24,5 +24,5 @@ cd ..
 clear
 
 echo -e "${txtgrn}[3/3] Executing DA2324_PRJ2_G163 ${txtwht}"
-sh -c "./bin/DA2324_PRJ2_G163 $1 $2"
+sh -c "rlwrap ./bin/DA2324_PRJ2_G163 $1 $2"
 
